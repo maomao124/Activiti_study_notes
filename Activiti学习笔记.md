@@ -184,3 +184,446 @@ BPMN图形其实是通过xml表示业务流程
 
 # Activiti部署
 
+## 数据库支持
+
+Activiti 在运行时需要数据库的支持，使用25张表，把流程定义节点内容读取到数据库表中，以供后续使用
+
+
+
+### 创建数据库
+
+创建  mysql  数据库  activiti
+
+```sql
+CREATE DATABASE activiti DEFAULT CHARACTER SET utf8;
+```
+
+
+
+
+
+创建 java项目，目的是使用Java生成数据库表
+
+![image-20230909190104139](img/Activiti学习笔记/image-20230909190104139.png)
+
+
+
+![image-20230909190135222](img/Activiti学习笔记/image-20230909190135222.png)
+
+
+
+
+
+
+
+### 导入maven依赖
+
+导入ProcessEngine所需要的 jar 包
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.1</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>mao</groupId>
+    <artifactId>activiti-table-generate</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>activiti-table-generate</name>
+    <description>activiti-table-generate</description>
+    <properties>
+        <java.version>1.8</java.version>
+        <activiti.version>7.0.0.Beta1</activiti.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-engine</artifactId>
+            <version>${activiti.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-spring</artifactId>
+            <version>${activiti.version}</version>
+        </dependency>
+        <!-- bpmn 模型处理 -->
+        <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-bpmn-model</artifactId>
+            <version>${activiti.version}</version>
+        </dependency>
+        <!-- bpmn 转换 -->
+        <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-bpmn-converter</artifactId>
+            <version>${activiti.version}</version>
+        </dependency>
+        <!-- bpmn json数据转换 -->
+        <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-json-converter</artifactId>
+            <version>${activiti.version}</version>
+        </dependency>
+        <!-- bpmn 布局 -->
+        <dependency>
+            <groupId>org.activiti</groupId>
+            <artifactId>activiti-bpmn-layout</artifactId>
+            <version>${activiti.version}</version>
+        </dependency>
+        <!-- activiti 云支持 -->
+        <dependency>
+            <groupId>org.activiti.cloud</groupId>
+            <artifactId>activiti-cloud-services-api</artifactId>
+            <version>${activiti.version}</version>
+        </dependency>
+        <!--mysql依赖 spring-boot-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!--mybatis依赖-->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.5.9</version>
+        </dependency>
+        <!-- 链接池 -->
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>1.4</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+```
+
+
+
+
+
+### 修改核心配置文件
+
+application.yml：
+
+```yaml
+# 设置日志级别，root表示根节点，即整体应用日志级别
+logging:
+  # 日志输出到文件的文件名
+  file:
+    name: server.log
+  # 字符集
+  charset:
+    file: UTF-8
+  # 分文件
+  logback:
+    rollingpolicy:
+      #最大文件大小
+      max-file-size: 64KB
+      # 文件格式
+      file-name-pattern: logs/server_log/%d{yyyy/MM月/dd日/}%i.log
+  # 设置日志组
+  group:
+    # 自定义组名，设置当前组中所包含的包
+    mao_pro: mao
+  level:
+    root: info
+    # 为对应组设置日志级别
+    mao_pro: debug
+    # 日志输出格式
+  # pattern:
+  # console: "%d %clr(%p) --- [%16t] %clr(%-40.40c){cyan} : %m %n"
+```
+
+
+
+
+
+### 添加activiti配置文件
+
+我们使用activiti提供的默认方式来创建mysql的表
+
+默认方式的要求是在 resources 下创建 activiti.cfg.xml 文件，注意：默认方式目录和文件名不能修改，因为activiti的源码中已经设置，到固定的目录读取固定文件名的文件。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                    http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/contex
+http://www.springframework.org/schema/context/spring-context.xsd
+http://www.springframework.org/schema/tx
+http://www.springframework.org/schema/tx/spring-tx.xsd">
+</beans>
+```
+
+
+
+
+
+### 在activiti.cfg.xml中进行配置
+
+默认方式要在在activiti.cfg.xml中bean的名字叫processEngineConfiguration，名字不可修改
+
+在这里有两种配置方式：
+
+* 单独配置数据源
+* 不单独配置数据源
+
+
+
+processEngineConfiguration 用来创建 ProcessEngine，在创建 ProcessEngine 时会执行数据库的操作
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                    http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/contex
+http://www.springframework.org/schema/context/spring-context.xsd
+http://www.springframework.org/schema/tx
+http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!-- 默认id对应的值 为processEngineConfiguration -->
+    <!-- processEngine Activiti的流程引擎 -->
+    <bean id="processEngineConfiguration"
+          class="org.activiti.engine.impl.cfg.StandaloneProcessEngineConfiguration">
+        <property name="jdbcDriver" value="com.mysql.jdbc.Driver"/>
+        <property name="jdbcUrl" value="jdbc:mysql:///activiti"/>
+        <property name="jdbcUsername" value="root"/>
+        <property name="jdbcPassword" value="123456"/>
+        <!-- activiti数据库表处理策略 -->
+        <property name="databaseSchemaUpdate" value="true"/>
+    </bean>
+</beans>
+```
+
+
+
+或者：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                    http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/contex
+http://www.springframework.org/schema/context/spring-context.xsd
+http://www.springframework.org/schema/tx
+http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!-- 这里可以使用 链接池 dbcp-->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+        <property name="url" value="jdbc:mysql:///activiti" />
+        <property name="username" value="root" />
+        <property name="password" value="123456" />
+        <property name="maxActive" value="3" />
+        <property name="maxIdle" value="1" />
+    </bean>
+
+    <bean id="processEngineConfiguration"
+          class="org.activiti.engine.impl.cfg.StandaloneProcessEngineConfiguration">
+        <!-- 引用数据源 上面已经设置好了-->
+        <property name="dataSource" ref="dataSource" />
+        <!-- activiti数据库表处理策略 -->
+        <property name="databaseSchemaUpdate" value="true"/>
+    </bean>
+</beans>
+```
+
+
+
+
+
+这些xml配置也可以在@Configuration配置里编写
+
+```java
+package mao.activiti_table_generate.config;
+
+import org.activiti.engine.impl.cfg.StandaloneProcessEngineConfiguration;
+import org.apache.commons.dbcp.BasicDataSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import javax.sql.DataSource;
+
+/**
+ * Project name(项目名称)：activiti-table-generate
+ * Package(包名): mao.activiti_table_generate.config
+ * Class(类名): ActivitiConfig
+ * Author(作者）: mao
+ * Author QQ：1296193245
+ * GitHub：https://github.com/maomao124/
+ * Date(创建日期)： 2023/9/9
+ * Time(创建时间)： 20:52
+ * Version(版本): 1.0
+ * Description(描述)： 无
+ */
+
+@Configuration
+public class ActivitiConfig
+{
+
+    /**
+     * Data source data source.
+     *
+     * @return the data source
+     */
+    @Bean
+    public DataSource dataSource()
+    {
+        BasicDataSource basicDataSource = new BasicDataSource();
+        basicDataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        basicDataSource.setUrl("jdbc:mysql:///activiti");
+        basicDataSource.setUsername("root");
+        basicDataSource.setPassword("123456");
+        return basicDataSource;
+    }
+
+
+    /**
+     * Activiti配置
+     * @param dataSource 数据源
+     * @return {@link StandaloneProcessEngineConfiguration}
+     */
+    @Bean
+    public StandaloneProcessEngineConfiguration processEngineConfiguration(@Autowired DataSource dataSource)
+    {
+        StandaloneProcessEngineConfiguration standaloneProcessEngineConfiguration = new StandaloneProcessEngineConfiguration();
+        standaloneProcessEngineConfiguration.setDataSource(dataSource);
+        return standaloneProcessEngineConfiguration;
+    }
+}
+```
+
+
+
+
+
+### 编写程序生成表
+
+调用activiti的工具类，生成acitivti需要的数据库表
+
+直接使用activiti提供的工具类ProcessEngines，会默认读取classpath下的activiti.cfg.xml文件，读取其中的数据库配置，创建 ProcessEngine，在创建ProcessEngine 时会自动创建表，默认的不能使用配置类的形式导入
+
+```java
+package mao.activiti_table_generate;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.ProcessEngines;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ActivitiTableGenerateApplication
+{
+    private static final Logger log = LoggerFactory.getLogger(ActivitiTableGenerateApplication.class);
+
+    public static void main(String[] args)
+    {
+        SpringApplication.run(ActivitiTableGenerateApplication.class, args);
+        log.info("开始生成");
+        //使用classpath下的activiti.cfg.xml中的配置创建processEngine
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        log.debug(processEngine.toString());
+        log.info("生成结束");
+    }
+
+}
+```
+
+
+
+
+
+### 运行查看结果
+
+```sh
+    .   ____          _            __ _ _
+   /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+  ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+   \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+    '  |____| .__|_| |_|_| |_\__, | / / / /
+   =========|_|==============|___/=/_/_/_/
+   :: Spring Boot ::                (v2.7.1)
+
+            _____                    _____                   _______
+           /\    \                  /\    \                 /::\    \
+          /::\____\                /::\    \               /::::\    \
+         /::::|   |               /::::\    \             /::::::\    \
+        /:::::|   |              /::::::\    \           /::::::::\    \
+       /::::::|   |             /:::/\:::\    \         /:::/~~\:::\    \
+      /:::/|::|   |            /:::/__\:::\    \       /:::/    \:::\    \
+     /:::/ |::|   |           /::::\   \:::\    \     /:::/    / \:::\    \
+    /:::/  |::|___|______    /::::::\   \:::\    \   /:::/____/   \:::\____\
+   /:::/   |::::::::\    \  /:::/\:::\   \:::\    \ |:::|    |     |:::|    |
+  /:::/    |:::::::::\____\/:::/  \:::\   \:::\____\|:::|____|     |:::|    |
+  \::/    / ~~~~~/:::/    /\::/    \:::\  /:::/    / \:::\    \   /:::/    /
+   \/____/      /:::/    /  \/____/ \:::\/:::/    /   \:::\    \ /:::/    /
+               /:::/    /            \::::::/    /     \:::\    /:::/    /
+              /:::/    /              \::::/    /       \:::\__/:::/    /
+             /:::/    /               /:::/    /         \::::::::/    /
+            /:::/    /               /:::/    /           \::::::/    /
+           /:::/    /               /:::/    /             \::::/    /
+          /:::/    /               /:::/    /               \::/____/
+          \::/    /                \::/    /                 ~~
+           \/____/                  \/____/
+   :: Github (https://github.com/maomao124) ::
+
+2023-09-09 21:11:02.453  INFO 25912 --- [           main] m.a.ActivitiTableGenerateApplication     : Starting ActivitiTableGenerateApplication using Java 1.8.0_332 on mao with PID 25912 (D:\程序\2023Q3\activiti-table-generate\target\classes started by mao in D:\程序\2023Q3\activiti-table-generate)
+2023-09-09 21:11:02.454 DEBUG 25912 --- [           main] m.a.ActivitiTableGenerateApplication     : Running with Spring Boot v2.7.1, Spring v5.3.21
+2023-09-09 21:11:02.455  INFO 25912 --- [           main] m.a.ActivitiTableGenerateApplication     : No active profile set, falling back to 1 default profile: "default"
+2023-09-09 21:11:02.725  INFO 25912 --- [           main] m.a.ActivitiTableGenerateApplication     : Started ActivitiTableGenerateApplication in 0.448 seconds (JVM running for 0.923)
+2023-09-09 21:11:02.727  INFO 25912 --- [           main] m.a.ActivitiTableGenerateApplication     : 开始生成
+2023-09-09 21:11:02.728  INFO 25912 --- [           main] org.activiti.engine.ProcessEngines       : Initializing process engine using configuration 'file:/D:/%e7%a8%8b%e5%ba%8f/2023Q3/activiti-table-generate/target/classes/activiti.cfg.xml'
+2023-09-09 21:11:02.728  INFO 25912 --- [           main] org.activiti.engine.ProcessEngines       : initializing process engine for resource file:/D:/%e7%a8%8b%e5%ba%8f/2023Q3/activiti-table-generate/target/classes/activiti.cfg.xml
+Loading class `com.mysql.jdbc.Driver'. This is deprecated. The new driver class is `com.mysql.cj.jdbc.Driver'. The driver is automatically registered via the SPI and manual loading of the driver class is generally unnecessary.
+2023-09-09 21:11:03.324  INFO 25912 --- [           main] aultActiviti5CompatibilityHandlerFactory : Activiti 5 compatibility handler implementation not found or error during instantiation : org.activiti.compatibility.DefaultActiviti5CompatibilityHandler. Activiti 5 backwards compatibility disabled.
+2023-09-09 21:11:03.349  INFO 25912 --- [           main] o.activiti.engine.impl.db.DbSqlSession   : performing create on engine with resource org/activiti/db/create/activiti.mysql.create.engine.sql
+2023-09-09 21:11:03.349  INFO 25912 --- [           main] o.activiti.engine.impl.db.DbSqlSession   : Found MySQL: majorVersion=8 minorVersion=0
+2023-09-09 21:11:04.658  INFO 25912 --- [           main] o.activiti.engine.impl.db.DbSqlSession   : performing create on history with resource org/activiti/db/create/activiti.mysql.create.history.sql
+2023-09-09 21:11:04.659  INFO 25912 --- [           main] o.activiti.engine.impl.db.DbSqlSession   : Found MySQL: majorVersion=8 minorVersion=0
+2023-09-09 21:11:04.905  INFO 25912 --- [           main] o.a.engine.impl.ProcessEngineImpl        : ProcessEngine default created
+2023-09-09 21:11:04.915  INFO 25912 --- [           main] org.activiti.engine.ProcessEngines       : initialised process engine default
+2023-09-09 21:11:04.915 DEBUG 25912 --- [           main] m.a.ActivitiTableGenerateApplication     : org.activiti.engine.impl.ProcessEngineImpl@5b275174
+2023-09-09 21:11:04.915  INFO 25912 --- [           main] m.a.ActivitiTableGenerateApplication     : 生成结束
+```
+
