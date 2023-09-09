@@ -627,3 +627,102 @@ Loading class `com.mysql.jdbc.Driver'. This is deprecated. The new driver class 
 2023-09-09 21:11:04.915  INFO 25912 --- [           main] m.a.ActivitiTableGenerateApplication     : 生成结束
 ```
 
+
+
+
+
+
+
+### 查看创建的表
+
+```sh
+PS C:\Users\mao\Desktop> mysql -u root -p
+Enter password: ********
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 19
+Server version: 8.0.32 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2023, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> use activiti;
+Database changed
+mysql> show tables;
++-----------------------+
+| Tables_in_activiti    |
++-----------------------+
+| act_evt_log           |
+| act_ge_bytearray      |
+| act_ge_property       |
+| act_hi_actinst        |
+| act_hi_attachment     |
+| act_hi_comment        |
+| act_hi_detail         |
+| act_hi_identitylink   |
+| act_hi_procinst       |
+| act_hi_taskinst       |
+| act_hi_varinst        |
+| act_procdef_info      |
+| act_re_deployment     |
+| act_re_model          |
+| act_re_procdef        |
+| act_ru_deadletter_job |
+| act_ru_event_subscr   |
+| act_ru_execution      |
+| act_ru_identitylink   |
+| act_ru_integration    |
+| act_ru_job            |
+| act_ru_suspended_job  |
+| act_ru_task           |
+| act_ru_timer_job      |
+| act_ru_variable       |
++-----------------------+
+25 rows in set (0.00 sec)
+
+mysql> show create table  act_evt_log;
++-------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table       | Create Table
+
+
+
+
+                             |
++-------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| act_evt_log | CREATE TABLE `act_evt_log` (
+  `LOG_NR_` bigint NOT NULL AUTO_INCREMENT,
+  `TYPE_` varchar(64) COLLATE utf8mb3_bin DEFAULT NULL,
+  `PROC_DEF_ID_` varchar(64) COLLATE utf8mb3_bin DEFAULT NULL,
+  `PROC_INST_ID_` varchar(64) COLLATE utf8mb3_bin DEFAULT NULL,
+  `EXECUTION_ID_` varchar(64) COLLATE utf8mb3_bin DEFAULT NULL,
+  `TASK_ID_` varchar(64) COLLATE utf8mb3_bin DEFAULT NULL,
+  `TIME_STAMP_` timestamp(3) NOT NULL,
+  `USER_ID_` varchar(255) COLLATE utf8mb3_bin DEFAULT NULL,
+  `DATA_` longblob,
+  `LOCK_OWNER_` varchar(255) COLLATE utf8mb3_bin DEFAULT NULL,
+  `LOCK_TIME_` timestamp(3) NULL DEFAULT NULL,
+  `IS_PROCESSED_` tinyint DEFAULT '0',
+  PRIMARY KEY (`LOG_NR_`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin |
++-------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql>
+```
+
+
+
+表已经在数据库里创建完成
+
+
+
+
+
+
+
+## 表结构
+
