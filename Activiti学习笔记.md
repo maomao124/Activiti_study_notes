@@ -726,3 +726,358 @@ mysql>
 
 ## 表结构
 
+### 表的命名规则和作用
+
+Activiti 的表都以 act_ 开头
+
+第二部分是表示表的用途的两个字母标识。 用途也和服务的 API 对应
+
+
+
+* **ACT_RE** ：'RE'表示 repository。 这个前缀的表包含了流程定义和流程静态资源 （图片，规则，等等）。
+* **ACT_RU**：'RU'表示 runtime。 这些运行时的表，包含流程实例，任务，变量，异步任务，等运行中的数据。 Activiti 只在流程实例执行过程中保存这些数据， 在流程结束时就会删除这些记录。 这样运行时表可以一直很小速度很快。
+* **ACT_HI**：'HI'表示 history。 这些表包含历史数据，比如历史流程实例， 变量，任务等等。
+* **ACT_GE** ： GE 表示 general。 通用数据， 用于不同场景下 
+
+
+
+### 数据表介绍
+
+|  **表分类**  |       **表名**        |                      **解释**                      |
+| :----------: | :-------------------: | :------------------------------------------------: |
+|   一般数据   |                       |                                                    |
+|              |  [ACT_GE_BYTEARRAY]   |              通用的流程定义和流程资源              |
+|              |   [ACT_GE_PROPERTY]   |                    系统相关属性                    |
+| 流程历史记录 |                       |                                                    |
+|              |   [ACT_HI_ACTINST]    |                   历史的流程实例                   |
+|              |  [ACT_HI_ATTACHMENT]  |                   历史的流程附件                   |
+|              |   [ACT_HI_COMMENT]    |                  历史的说明性信息                  |
+|              |    [ACT_HI_DETAIL]    |             历史的流程运行中的细节信息             |
+|              | [ACT_HI_IDENTITYLINK] |            历史的流程运行过程中用户关系            |
+|              |   [ACT_HI_PROCINST]   |                   历史的流程实例                   |
+|              |   [ACT_HI_TASKINST]   |                   历史的任务实例                   |
+|              |   [ACT_HI_VARINST]    |             历史的流程运行中的变量信息             |
+|  流程定义表  |                       |                                                    |
+|              |  [ACT_RE_DEPLOYMENT]  |                    部署单元信息                    |
+|              |    [ACT_RE_MODEL]     |                      模型信息                      |
+|              |   [ACT_RE_PROCDEF]    |                  已部署的流程定义                  |
+|  运行实例表  |                       |                                                    |
+|              | [ACT_RU_EVENT_SUBSCR] |                     运行时事件                     |
+|              |  [ACT_RU_EXECUTION]   |                 运行时流程执行实例                 |
+|              | [ACT_RU_IDENTITYLINK] | 运行时用户关系信息，存储任务节点与参与者的相关信息 |
+|              |     [ACT_RU_JOB]      |                     运行时作业                     |
+|              |     [ACT_RU_TASK]     |                     运行时任务                     |
+|              |   [ACT_RU_VARIABLE]   |                    运行时变量表                    |
+
+
+
+
+
+
+
+# Activiti类关系图
+
+## 类关系图
+
+![image-20230909214044596](img/Activiti学习笔记/image-20230909214044596.png)
+
+
+
+IdentityService，FormService两个Serivce都已经删除了，不是继承关系
+
+
+
+![image-20230909214153947](img/Activiti学习笔记/image-20230909214153947.png)
+
+
+
+
+
+
+
+## activiti.cfg.xml
+
+activiti的引擎配置文件，包括：ProcessEngineConfiguration的定义、数据源定义、事务管理器等，此文件其实就是一个spring配置文件
+
+
+
+## 流程引擎配置类
+
+流程引擎的配置类（ProcessEngineConfiguration），通过ProcessEngineConfiguration可以创建工作流引擎ProceccEngine
+
+常用的实现类如下：
+
+* SpringProcessEngineConfiguration
+* StandaloneProcessEngineConfiguration
+
+
+
+![image-20230909214708973](img/Activiti学习笔记/image-20230909214708973.png)
+
+
+
+![image-20230909214717855](img/Activiti学习笔记/image-20230909214717855.png)
+
+
+
+![image-20230909214748238](img/Activiti学习笔记/image-20230909214748238.png)
+
+
+
+![image-20230909214821705](img/Activiti学习笔记/image-20230909214821705.png)
+
+
+
+
+
+
+
+### StandaloneProcessEngineConfiguration
+
+使用StandaloneProcessEngineConfigurationActiviti可以单独运行，来创建ProcessEngine，Activiti会自己处理事务
+
+通常在activiti.cfg.xml配置文件中定义一个id为 `processEngineConfiguration` 的bean
+
+
+
+
+
+### SpringProcessEngineConfiguration
+
+通过`org.activiti.spring.SpringProcessEngineConfiguration` 与Spring整合
+
+
+
+xml配置示例：
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+ xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+ xsi:schemaLocation="http://www.springframework.org/schema/beans 
+       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd 
+       http://www.springframework.org/schema/mvc 
+       http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd 
+       http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context-3.1.xsd 
+       http://www.springframework.org/schema/aop 
+       http://www.springframework.org/schema/aop/spring-aop-3.1.xsd 
+       http://www.springframework.org/schema/tx 
+       http://www.springframework.org/schema/tx/spring-tx-3.1.xsd ">
+    <!-- 工作流引擎配置bean -->
+    <bean id="processEngineConfiguration" class="org.activiti.spring.SpringProcessEngineConfiguration">
+       <!-- 数据源 -->
+       <property name="dataSource" ref="dataSource" />
+       <!-- 使用spring事务管理器 -->
+       <property name="transactionManager" ref="transactionManager" />
+       <!-- 数据库策略 -->
+       <property name="databaseSchemaUpdate" value="drop-create" />
+       <!-- activiti的定时任务关闭 -->
+      <property name="jobExecutorActivate" value="false" />
+    </bean>
+    <!-- 流程引擎 -->
+    <bean id="processEngine" class="org.activiti.spring.ProcessEngineFactoryBean">
+       <property name="processEngineConfiguration" ref="processEngineConfiguration" />
+    </bean>
+    <!-- 资源服务service -->
+    <bean id="repositoryService" factory-bean="processEngine"
+       factory-method="getRepositoryService" />
+    <!-- 流程运行service -->
+    <bean id="runtimeService" factory-bean="processEngine"
+       factory-method="getRuntimeService" />
+    <!-- 任务管理service -->
+    <bean id="taskService" factory-bean="processEngine"
+       factory-method="getTaskService" />
+    <!-- 历史管理service -->
+    <bean id="historyService" factory-bean="processEngine" factory-method="getHistoryService" />
+    <!-- 用户管理service -->
+    <bean id="identityService" factory-bean="processEngine" factory-method="getIdentityService" />
+    <!-- 引擎管理service -->
+    <bean id="managementService" factory-bean="processEngine" factory-method="getManagementService" />
+    <!-- 数据源 -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+       <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+       <property name="url" value="jdbc:mysql://localhost:3306/activiti" />
+       <property name="username" value="root" />
+       <property name="password" value="mysql" />
+       <property name="maxActive" value="3" />
+       <property name="maxIdle" value="1" />
+    </bean>
+    <!-- 事务管理器 -->
+    <bean id="transactionManager"
+     class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+       <property name="dataSource" ref="dataSource" />
+    </bean>
+    <!-- 通知 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+       <tx:attributes></tx:attributes>
+           <!-- 传播行为 -->
+           <tx:method name="save*" propagation="REQUIRED" />
+           <tx:method name="insert*" propagation="REQUIRED" />
+           <tx:method name="delete*" propagation="REQUIRED" />
+           <tx:method name="update*" propagation="REQUIRED" />
+           <tx:method name="find*" propagation="SUPPORTS" read-only="true" />
+           <tx:method name="get*" propagation="SUPPORTS" read-only="true" />
+        </tx:attributes>
+    </tx:advice>
+    <!-- 切面，根据具体项目修改切点配置 -->
+    <aop:config proxy-target-class="true">
+       <aop:advisor advice-ref="txAdvice"  pointcut="execution(* 业务包名.service.impl.*.(..))"* />
+   </aop:config>
+</beans>
+```
+
+
+
+
+
+### 创建processEngineConfiguration
+
+方式一：
+
+```java
+ProcessEngineConfiguration configuration = ProcessEngineConfiguration.createProcessEngineConfigurationFromResource("activiti.cfg.xml")
+```
+
+
+
+上边的代码要求activiti.cfg.xml中必须有一个processEngineConfiguration的bean
+
+
+
+方式二：
+
+```java
+ProcessEngineConfiguration.createProcessEngineConfigurationFromResource(String resource, String beanName);
+```
+
+
+
+
+
+
+
+## 工作流引擎创建
+
+工作流引擎（ProcessEngine），相当于一个门面接口，通过ProcessEngineConfiguration创建processEngine，然后通过ProcessEngine创建各个service接口
+
+
+
+### 默认创建方式
+
+将activiti.cfg.xml文件名及路径固定，且activiti.cfg.xml文件中有 processEngineConfiguration的配置
+
+```java
+//直接使用工具类 ProcessEngines，使用classpath下的activiti.cfg.xml中的配置创建processEngine
+ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+System.out.println(processEngine);
+```
+
+
+
+
+
+### 其它创建方式
+
+```java
+//先构建ProcessEngineConfiguration
+ProcessEngineConfiguration configuration = ProcessEngineConfiguration.createProcessEngineConfigurationFromResource("activiti.cfg.xml");
+//通过ProcessEngineConfiguration创建ProcessEngine，此时会创建数据库
+ProcessEngine processEngine = configuration.buildProcessEngine();
+```
+
+
+
+
+
+
+
+## Servcie服务接口
+
+Service是工作流引擎提供用于进行工作流部署、执行、管理的服务接口，我们使用这些接口可以就是操作服务对应的数据表
+
+
+
+### Service创建方式
+
+通过ProcessEngine创建Service
+
+```java
+RuntimeService runtimeService = processEngine.getRuntimeService();
+RepositoryService repositoryService = processEngine.getRepositoryService();
+TaskService taskService = processEngine.getTaskService();
+```
+
+
+
+
+
+## Service
+
+有如下的Service
+
+|    service名称    |       service作用        |
+| :---------------: | :----------------------: |
+| RepositoryService |   activiti的资源管理类   |
+|  RuntimeService   | activiti的流程运行管理类 |
+|    TaskService    |   activiti的任务管理类   |
+|  HistoryService   |   activiti的历史管理类   |
+|  ManagerService   |   activiti的引擎管理类   |
+
+
+
+
+
+### RepositoryService
+
+是activiti的资源管理类，提供了管理和控制流程发布包和流程定义的操作。使用工作流建模工具设计的业务流程图需要使用此service将流程定义文件的内容部署到计算机
+
+除了部署流程定义以外还可以查询引擎中的发布包和流程定义
+
+暂停或激活发布包，对应全部和特定流程定义。 暂停意味着它们不能再执行任何操作了，激活是对应的反向操作。获得多种资源，像是包含在发布包里的文件， 或引擎自动生成的流程图。
+
+
+
+
+
+### RuntimeService
+
+Activiti的流程运行管理类。可以从这个服务类中获取很多关于流程执行相关的信息
+
+
+
+
+
+### TaskService
+
+Activiti的任务管理类。可以从这个类中获取任务的信息
+
+
+
+
+
+### HistoryService
+
+Activiti的历史管理类，可以查询历史信息，执行流程时，引擎会保存很多数据（根据配置），比如流程实例启动时间，任务的参与者， 完成任务的时间，每个流程实例的执行路径，等等。 这个服务主要通过查询功能来获得这些数据
+
+
+
+
+
+### ManagementService
+
+Activiti的引擎管理类，提供了对Activiti流程引擎的管理和维护功能，这些功能不在工作流驱动的应用程序中使用，主要用于Activiti系统的日常维护
+
+
+
+
+
+
+
+
+
+
+
+# Activiti入门
+
