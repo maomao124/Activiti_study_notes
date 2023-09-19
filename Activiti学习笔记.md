@@ -1373,7 +1373,330 @@ assignee0 和 assignee1
 
 
 
+xml文件：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/processdef">
+  <process id="test" name="test" isExecutable="true">
+    <startEvent id="sid-c3b15a5f-fe70-4fe1-af9a-edf7b415c0ee" name="请假流程定义"/>
+    <userTask id="sid-32a2b9d4-6749-4d6b-aedb-2fac3815170c" name="创建申请" activiti:assignee="${assignee0}"/>
+    <userTask id="sid-b602704c-cae7-4346-bab2-07f7831ba0e8" name="审批申请" activiti:assignee="${assignee1}"/>
+    <sequenceFlow id="sid-a6d8056e-3823-4e0b-beb4-1dde11a497c8" sourceRef="sid-32a2b9d4-6749-4d6b-aedb-2fac3815170c" targetRef="sid-b602704c-cae7-4346-bab2-07f7831ba0e8"/>
+    <endEvent id="sid-c82edc5e-3028-4d2e-bcbc-d780ece87d6f" name="结束"/>
+    <sequenceFlow id="sid-fac53945-3036-4db7-9c73-da1631eb6cf9" sourceRef="sid-b602704c-cae7-4346-bab2-07f7831ba0e8" targetRef="sid-c82edc5e-3028-4d2e-bcbc-d780ece87d6f"/>
+    <sequenceFlow id="sid-8930ce5c-ba7d-4f48-a4a0-113ff80fca96" sourceRef="sid-c3b15a5f-fe70-4fe1-af9a-edf7b415c0ee" targetRef="sid-32a2b9d4-6749-4d6b-aedb-2fac3815170c"/>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_test">
+    <bpmndi:BPMNPlane bpmnElement="test" id="BPMNPlane_test">
+      <bpmndi:BPMNShape id="shape-643471ce-5aaf-4ce9-9654-0f9b552705b4" bpmnElement="sid-c3b15a5f-fe70-4fe1-af9a-edf7b415c0ee">
+        <omgdc:Bounds x="-1823.05" y="-3102.7" width="30.0" height="30.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape-659cf6cb-a545-4b63-925d-4cad5523a1dc" bpmnElement="sid-32a2b9d4-6749-4d6b-aedb-2fac3815170c">
+        <omgdc:Bounds x="-1858.05" y="-3047.7" width="100.0" height="80.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape-279309f5-d8fa-4951-88e1-20c98857ea5b" bpmnElement="sid-b602704c-cae7-4346-bab2-07f7831ba0e8">
+        <omgdc:Bounds x="-1858.05" y="-2936.0425" width="100.0" height="80.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge-f434e240-3d5e-4c2f-9f6c-2544d81f831e" bpmnElement="sid-a6d8056e-3823-4e0b-beb4-1dde11a497c8">
+        <omgdi:waypoint x="-1808.05" y="-2967.7"/>
+        <omgdi:waypoint x="-1808.05" y="-2936.0425"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="shape-f0874fe4-9331-4915-9b96-c436412231dc" bpmnElement="sid-c82edc5e-3028-4d2e-bcbc-d780ece87d6f">
+        <omgdc:Bounds x="-1713.05" y="-2903.2" width="30.0" height="30.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge-b8629684-33cd-4007-b782-b6403dc5034b" bpmnElement="sid-fac53945-3036-4db7-9c73-da1631eb6cf9">
+        <omgdi:waypoint x="-1758.05" y="-2896.0425"/>
+        <omgdi:waypoint x="-1713.05" y="-2888.2"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge-3144cad3-fff8-4390-a9d6-f1ffdce61cde" bpmnElement="sid-8930ce5c-ba7d-4f48-a4a0-113ff80fca96">
+        <omgdi:waypoint x="-1808.05" y="-3072.7"/>
+        <omgdi:waypoint x="-1808.05" y="-3047.7"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
+
+```
+
+
+
+
+
+
+
 
 
 ## 流程定义部署
+
+将上面在设计器中定义的流程部署到activiti数据库中，就是流程定义部署
+
+
+
+```java
+package mao.activiti_process_deploy;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.ProcessEngines;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.repository.Deployment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+
+@SpringBootApplication
+public class ActivitiProcessDeployApplication
+{
+    private static final Logger log = LoggerFactory.getLogger(ActivitiProcessDeployApplication.class);
+
+    public static void main(String[] args)
+    {
+        SpringApplication.run(ActivitiProcessDeployApplication.class, args);
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        RepositoryService repositoryService = processEngine.getRepositoryService();
+        Deployment deployment = repositoryService.createDeployment()
+                .name("请假流程定义")
+                .addClasspathResource("test.bpmn20.xml")
+                .deploy();
+        log.info("流程id：" + deployment.getId());
+        log.info("流程名称：" + deployment.getName());
+    }
+
+}
+```
+
+
+
+也可以直接加载压缩包
+
+```java
+// 定义zip输入流
+		InputStream inputStream = this
+				.getClass()
+				.getClassLoader()
+				.getResourceAsStream(
+						"bpmn/evection.zip");
+		ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+		// 获取repositoryService
+		RepositoryService repositoryService = processEngine
+				.getRepositoryService();
+		// 流程部署
+		Deployment deployment = repositoryService.createDeployment()
+				.addZipInputStream(zipInputStream)
+				.deploy();
+```
+
+
+
+
+
+运行程序：
+
+```sh
+2023-09-19 11:03:50.027  INFO 13952 --- [           main] aultActiviti5CompatibilityHandlerFactory : Activiti 5 compatibility handler implementation not found or error during instantiation : org.activiti.compatibility.DefaultActiviti5CompatibilityHandler. Activiti 5 backwards compatibility disabled.
+2023-09-19 11:03:50.050  INFO 13952 --- [           main] o.a.engine.impl.ProcessEngineImpl        : ProcessEngine default created
+2023-09-19 11:03:50.052  INFO 13952 --- [           main] org.activiti.engine.ProcessEngines       : initialised process engine default
+2023-09-19 11:03:50.142  INFO 13952 --- [           main] m.a.ActivitiProcessDeployApplication     : 流程id：2501
+2023-09-19 11:03:50.142  INFO 13952 --- [           main] m.a.ActivitiProcessDeployApplication     : 流程名称：请假流程定义
+```
+
+
+
+
+
+
+
+## 操作的数据表
+
+流程定义部署后操作activiti的3张表如下：
+
+* **act_re_deployment**：流程定义部署表，每部署一次增加一条记录
+* **act_re_procdef**：流程定义表，部署每个新的流程定义都会在这张表中增加一条记录
+* **act_ge_bytearray**：流程资源表 
+
+
+
+
+
+看看写入了什么数据：
+
+```sql
+select * from act_re_deployment;
+```
+
+
+
+
+
+```sql
+select * from act_re_procdef;
+```
+
+
+
+
+
+```sql
+select * from act_ge_bytearray;
+```
+
+
+
+```sh
+mysql> use activiti;
+Database changed
+mysql> select * from act_re_deployment;
++------+--------------+-----------+------+------------+-------------------------+-----------------+
+| ID_  | NAME_        | CATEGORY_ | KEY_ | TENANT_ID_ | DEPLOY_TIME_            | ENGINE_VERSION_ |
++------+--------------+-----------+------+------------+-------------------------+-----------------+
+| 2501 | 请假流程定义 | NULL      | NULL |            | 2023-09-19 11:03:50.054 | NULL            |
++------+--------------+-----------+------+------------+-------------------------+-----------------+
+1 row in set (0.00 sec)
+
+mysql> select * from act_re_procdef;
++-------------+------+------------------------------------+-------+------+----------+----------------+-----------------+---------------------+--------------+---------------------+-------------------------+-------------------+------------+-----------------+
+| ID_         | REV_ | CATEGORY_                          | NAME_ | KEY_ | VERSION_ | DEPLOYMENT_ID_ | RESOURCE_NAME_  | DGRM_RESOURCE_NAME_ | DESCRIPTION_ | HAS_START_FORM_KEY_ | HAS_GRAPHICAL_NOTATION_ | SUSPENSION_STATE_ | TENANT_ID_ | ENGINE_VERSION_ |
++-------------+------+------------------------------------+-------+------+----------+----------------+-----------------+---------------------+--------------+---------------------+-------------------------+-------------------+------------+-----------------+
+| test:1:2503 |    1 | http://www.activiti.org/processdef | test  | test |        1 | 2501           | test.bpmn20.xml | NULL                | NULL         |                   0 |                       1 |                 1 |            | NULL            |
++-------------+------+------------------------------------+-------+------+----------+----------------+-----------------+---------------------+--------------+---------------------+-------------------------+-------------------+------------+-----------------+
+1 row in set (0.00 sec)
+
+mysql> select * from act_ge_bytearray;
+```
+
+```sh
+mysql> select * from act_ge_bytearray\G;
+*************************** 1. row ***************************
+           ID_: 2502
+          REV_: 1
+         NAME_: test.bpmn20.xml
+DEPLOYMENT_ID_: 2501
+        BYTES_: 0x3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D225554462D38223F3E0D0A3C646566696E6974696F6E7320786D6C6E733D22687474703A2F2F7777772E6F6D672E6F72672F737065632F42504D4E2F32303130303532342F4D4F44454C2220786D6C6E733A7873693D22687474703A2F2F7777772E77332E6F72672F323030312F584D4C536368656D612D696E7374616E63652220786D6C6E733A7873643D22687474703A2F2F7777772E77332E6F72672F323030312F584D4C536368656D612220786D6C6E733A61637469766974693D22687474703A2F2F61637469766974692E6F72672F62706D6E2220786D6C6E733A62706D6E64693D22687474703A2F2F7777772E6F6D672E6F72672F737065632F42504D4E2F32303130303532342F44492220786D6C6E733A6F6D6764633D22687474703A2F2F7777772E6F6D672E6F72672F737065632F44442F32303130303532342F44432220786D6C6E733A6F6D6764693D22687474703A2F2F7777772E6F6D672E6F72672F737065632F44442F32303130303532342F44492220747970654C616E67756167653D22687474703A2F2F7777772E77332E6F72672F323030312F584D4C536368656D61222065787072657373696F6E4C616E67756167653D22687474703A2F2F7777772E77332E6F72672F313939392F585061746822207461726765744E616D6573706163653D22687474703A2F2F7777772E61637469766974692E6F72672F70726F63657373646566223E0D0A20203C70726F636573732069643D227465737422206E616D653D22746573742220697345786563757461626C653D2274727565223E0D0A202020203C73746172744576656E742069643D227369642D63336231356135662D666537302D346665312D616639612D65646637623431356330656522206E616D653D22E8AFB7E58187E6B581E7A88BE5AE9AE4B989222F3E0D0A202020203C757365725461736B2069643D227369642D33326132623964342D363734392D346436622D616564622D32666163333831353137306322206E616D653D22E5889BE5BBBAE794B3E8AFB7222061637469766974693A61737369676E65653D22247B61737369676E6565307D222F3E0D0A202020203C757365725461736B2069643D227369642D62363032373034632D636165372D343334362D626162322D30376637383331626130653822206E616D653D22E5AEA1E689B9E794B3E8AFB7222061637469766974693A61737369676E65653D22247B61737369676E6565317D222F3E0D0A202020203C73657175656E6365466C6F772069643D227369642D61366438303536652D333832332D346530622D626562342D3164646531316134393763382220736F757263655265663D227369642D33326132623964342D363734392D346436622D616564622D32666163333831353137306322207461726765745265663D227369642D62363032373034632D636165372D343334362D626162322D303766373833316261306538222F3E0D0A202020203C656E644576656E742069643D227369642D63383265646335652D333032382D346432652D626362632D64373830656365383764366622206E616D653D22E7BB93E69D9F222F3E0D0A202020203C73657175656E6365466C6F772069643D227369642D66616335333934352D333033362D346462372D396337332D6461313633316562366366392220736F757263655265663D227369642D62363032373034632D636165372D343334362D626162322D30376637383331626130653822207461726765745265663D227369642D63383265646335652D333032382D346432652D626362632D643738306563653837643666222F3E0D0A202020203C73657175656E6365466C6F772069643D227369642D38393330636535632D626137642D346634382D613461302D3131336666383066636139362220736F757263655265663D227369642D63336231356135662D666537302D346665312D616639612D65646637623431356330656522207461726765745265663D227369642D33326132623964342D363734392D346436622D616564622D326661633338313531373063222F3E0D0A20203C2F70726F636573733E0D0A20203C62706D6E64693A42504D4E4469616772616D2069643D2242504D4E4469616772616D5F74657374223E0D0A202020203C62706D6E64693A42504D4E506C616E652062706D6E456C656D656E743D2274657374222069643D2242504D4E506C616E655F74657374223E0D0A2020202020203C62706D6E64693A42504D4E53686170652069643D2273686170652D36343334373163652D356161662D346365392D393635342D306639623535323730356234222062706D6E456C656D656E743D227369642D63336231356135662D666537302D346665312D616639612D656466376234313563306565223E0D0A20202020202020203C6F6D6764633A426F756E647320783D222D313832332E30352220793D222D333130322E37222077696474683D2233302E3022206865696768743D2233302E30222F3E0D0A2020202020203C2F62706D6E64693A42504D4E53686170653E0D0A2020202020203C62706D6E64693A42504D4E53686170652069643D2273686170652D36353963663663622D613534352D346236332D393235642D346361643535323361316463222062706D6E456C656D656E743D227369642D33326132623964342D363734392D346436622D616564622D326661633338313531373063223E0D0A20202020202020203C6F6D6764633A426F756E647320783D222D313835382E30352220793D222D333034372E37222077696474683D223130302E3022206865696768743D2238302E30222F3E0D0A2020202020203C2F62706D6E64693A42504D4E53686170653E0D0A2020202020203C62706D6E64693A42504D4E53686170652069643D2273686170652D32373933303966352D643866612D343935312D383865312D323063393838353765613562222062706D6E456C656D656E743D227369642D62363032373034632D636165372D343334362D626162322D303766373833316261306538223E0D0A20202020202020203C6F6D6764633A426F756E647320783D222D313835382E30352220793D222D323933362E30343235222077696474683D223130302E3022206865696768743D2238302E30222F3E0D0A2020202020203C2F62706D6E64693A42504D4E53686170653E0D0A2020202020203C62706D6E64693A42504D4E456467652069643D22656467652D66343334653234302D336435652D346332662D396636632D323534346438316638333165222062706D6E456C656D656E743D227369642D61366438303536652D333832332D346530622D626562342D316464653131613439376338223E0D0A20202020202020203C6F6D6764693A776179706F696E7420783D222D313830382E30352220793D222D323936372E37222F3E0D0A20202020202020203C6F6D6764693A776179706F696E7420783D222D313830382E30352220793D222D323933362E30343235222F3E0D0A2020202020203C2F62706D6E64693A42504D4E456467653E0D0A2020202020203C62706D6E64693A42504D4E53686170652069643D2273686170652D66303837346665342D393333312D343931352D396239362D633433363431323233316463222062706D6E456C656D656E743D227369642D63383265646335652D333032382D346432652D626362632D643738306563653837643666223E0D0A20202020202020203C6F6D6764633A426F756E647320783D222D313731332E30352220793D222D323930332E32222077696474683D2233302E3022206865696768743D2233302E30222F3E0D0A2020202020203C2F62706D6E64693A42504D4E53686170653E0D0A2020202020203C62706D6E64693A42504D4E456467652069643D22656467652D62383632393638342D333363642D343030372D623738322D623634303364633530333462222062706D6E456C656D656E743D227369642D66616335333934352D333033362D346462372D396337332D646131363331656236636639223E0D0A20202020202020203C6F6D6764693A776179706F696E7420783D222D313735382E30352220793D222D323839362E30343235222F3E0D0A20202020202020203C6F6D6764693A776179706F696E7420783D222D313731332E30352220793D222D323838382E32222F3E0D0A2020202020203C2F62706D6E64693A42504D4E456467653E0D0A2020202020203C62706D6E64693A42504D4E456467652069643D22656467652D33313434636164332D666666382D343339302D613964362D663166666463653631636465222062706D6E456C656D656E743D227369642D38393330636535632D626137642D346634382D613461302D313133666638306663613936223E0D0A20202020202020203C6F6D6764693A776179706F696E7420783D222D313830382E30352220793D222D333037322E37222F3E0D0A20202020202020203C6F6D6764693A776179706F696E7420783D222D313830382E30352220793D222D333034372E37222F3E0D0A2020202020203C2F62706D6E64693A42504D4E456467653E0D0A202020203C2F62706D6E64693A42504D4E506C616E653E0D0A20203C2F62706D6E64693A42504D4E4469616772616D3E0D0A3C2F646566696E6974696F6E733E0D0A
+    GENERATED_: 0
+1 row in set (0.00 sec)
+```
+
+
+
+![image-20230919111252469](img/Activiti学习笔记/image-20230919111252469.png)
+
+
+
+![image-20230919111302970](img/Activiti学习笔记/image-20230919111302970.png)
+
+
+
+
+
+![image-20230919111311799](img/Activiti学习笔记/image-20230919111311799.png)
+
+
+
+
+
+`act_re_deployment`和`act_re_procdef`一对多关系，一次部署在流程部署表生成一条记录，但一次部署可以部署多个流程定义，每个流程定义在流程定义表生成一条记录
+
+
+
+
+
+
+
+## 启动流程实例
+
+流程定义部署在activiti后就可以通过工作流管理业务流程了
+
+针对该流程，启动一个流程表示发起一个新的请假申请单，这就相当于java类与java对象的关系，类定义好后需要new创建一个对象使用
+
+
+
+```java
+package mao.activiti_process_deploy;
+
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.ProcessEngines;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@SpringBootTest
+class ActivitiProcessDeployApplicationTests
+{
+    private static final Logger log = LoggerFactory.getLogger(ActivitiProcessDeployApplicationTests.class);
+
+    @Test
+    void testStartProcess()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        RuntimeService runtimeService = processEngine.getRuntimeService();
+        Map<String, Object> map = new HashMap<>();
+        map.put("assignee0", "张三");
+        map.put("assignee1", "王经理");
+        ProcessInstance instance = runtimeService.startProcessInstanceByKey("test", map);
+        log.info("流程定义id:" + instance.getProcessDefinitionId());
+        log.info("流程实例 id:" + instance.getId());
+        log.info("当前活动的id:" + instance.getActivityId());
+    }
+
+}
+
+```
+
+
+
+启动流程时，分别指定各个任务的**负责人，**上述代码表示该请假流程是由**张三**发起的，审批人是**王经理**
+
+其中参数 **key** 表示指定所启动的流程定义，而 **map** 则是为其启动之后的流程实例赋值
+
+
+
+key位于xml文件里
+
+![image-20230919112407095](img/Activiti学习笔记/image-20230919112407095.png)
+
+
+
+
+
+运行：
+
+```sh
+2023-09-19 11:23:29.648  INFO 27400 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程定义id:test:1:2503
+2023-09-19 11:23:29.648  INFO 27400 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程实例 id:5001
+2023-09-19 11:23:29.648  INFO 27400 --- [           main] .a.ActivitiProcessDeployApplicationTests : 当前活动的id:null
+```
+
+
+
+
+
+
+
+## 操作的数据表
+
+启动流程实例操作的数据表如下：
+
+* **act_hi_actinst**：流程实例执行历史
+* **act_hi_identitylink**：流程的参与用户历史信息
+* **act_hi_procinst**：流程实例历史信息
+* **act_hi_taskinst**：流程任务历史信息
+* **act_ru_execution**：流程执行信息
+* **act_ru_identitylink**：流程的参与用户信息
+* **act_ru_task**：任务信息
+
+
+
+
+
+
+
+## 任务查询
 
