@@ -1081,3 +1081,299 @@ Activiti的引擎管理类，提供了对Activiti流程引擎的管理和维护�
 
 # Activiti入门
 
+## 流程
+
+1. 定义流程，按照BPMN的规范，使用流程定义工具，用**流程符号**把整个流程描述出来
+2. 部署流程，把画好的流程定义文件，加载到数据库中，生成表的数据
+3. 启动流程，使用java代码来操作数据库表中的内容
+
+
+
+
+
+## 流程符号
+
+### 事件 Event
+
+![image-20230919093521965](img/Activiti学习笔记/image-20230919093521965.png)
+
+
+
+
+
+### 活动 Activity
+
+活动是工作或任务的一个通用术语。一个活动可以是一个任务，还可以是一个当前流程的子处理流程
+
+
+
+![image-20230919093559439](img/Activiti学习笔记/image-20230919093559439.png)
+
+
+
+
+
+### 网关 GateWay
+
+
+
+![image-20230919093619607](img/Activiti学习笔记/image-20230919093619607.png)
+
+
+
+
+
+#### 排他网关
+
+只有一条路径会被选择。流程执行到该网关时，按照输出流的顺序逐个计算，当条件的计算结果为true时，继续执行当前网关的输出流
+
+如果多条线路计算结果都是 true，则会执行第一个值为 true 的线路。如果所有网关计算结果没有true，则引擎会抛出异常
+
+排他网关需要和条件顺序流结合使用，default 属性指定默认顺序流，当所有的条件不满足时会执行默认顺序流
+
+
+
+#### 并行网关
+
+所有路径会被同时选择
+
+并行执行所有输出顺序流，为每一条顺序流创建一个并行执行线路
+
+所有从并行网关拆分并执行完成的线路均在此等候，直到所有的线路都执行完成才继续向下执行
+
+
+
+#### 包容网关
+
+可以同时执行多条线路，也可以在网关上设置条件
+
+计算每条线路上的表达式，当表达式计算结果为true时，创建一个并行线路并继续执行
+
+所有从并行网关拆分并执行完成的线路均在此等候，直到所有的线路都执行完成才继续向下执行
+
+
+
+#### 事件网关
+
+专门为中间捕获事件设置的，允许设置多个输出流指向多个不同的中间捕获事件。当流程执行到事件网关后，流程处于等待状态，需要等待抛出事件才能将等待状态转换为活动状态
+
+
+
+
+
+### 流向 Flow
+
+流是连接两个流程节点的连线
+
+
+
+![image-20230919094629901](img/Activiti学习笔记/image-20230919094629901.png)
+
+
+
+
+
+
+
+## idea插件
+
+Activiti插件actiBPM在新版的idea 2020及以上版本中已经不支持
+
+Activiti BPMN visualizer是一款支持编辑和游览工作流设计图的idea插件，但是它对工作流设计中的网关设计支持并不太友好
+
+![image-20230919095350741](img/Activiti学习笔记/image-20230919095350741.png)
+
+
+
+
+
+
+
+
+
+
+
+## Activiti BPMN visualizer使用示例
+
+
+
+
+
+在资源路径下创建文件
+
+![image-20230919095540524](img/Activiti学习笔记/image-20230919095540524.png)
+
+
+
+示例如下：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.activiti.org/processdef">
+    <process id="test" name="test" isExecutable="true">
+    </process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_test">
+        <bpmndi:BPMNPlane bpmnElement="test" id="BPMNPlane_test">
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>
+
+```
+
+
+
+右键点击
+
+![image-20230919095657180](img/Activiti学习笔记/image-20230919095657180.png)
+
+
+
+
+
+
+
+![image-20230919102701647](img/Activiti学习笔记/image-20230919102701647.png)
+
+
+
+
+
+![image-20230919102637914](img/Activiti学习笔记/image-20230919102637914.png)
+
+
+
+
+
+![image-20230919102720059](img/Activiti学习笔记/image-20230919102720059.png)
+
+
+
+
+
+![image-20230919102736998](img/Activiti学习笔记/image-20230919102736998.png)
+
+
+
+![image-20230919102748943](img/Activiti学习笔记/image-20230919102748943.png)
+
+
+
+![image-20230919102804418](img/Activiti学习笔记/image-20230919102804418.png)
+
+
+
+
+
+
+
+
+
+
+
+## Camunda Modeler
+
+Camunda Modeler是Camunda官方提供的建模器
+
+是一个流程图的绘图工具。支持三种协议类型流程文件： BPMN diagram、 DMN diagram、Form。
+
+
+
+### 下载
+
+https://camunda.com/download/modeler/
+
+![image-20230919100107606](img/Activiti学习笔记/image-20230919100107606.png)
+
+
+
+
+
+### 解压
+
+解压后安装路径必须是非中文路径
+
+
+
+解压后的目录如下：
+
+![image-20230919101200889](img/Activiti学习笔记/image-20230919101200889.png)
+
+
+
+
+
+### 运行
+
+双击执行`Camunda Modeler.exe`
+
+![image-20230919101328612](img/Activiti学习笔记/image-20230919101328612.png)
+
+
+
+![image-20230919101423299](img/Activiti学习笔记/image-20230919101423299.png)
+
+
+
+
+
+
+
+### BPMN设计界面
+
+![image-20230919101824204](img/Activiti学习笔记/image-20230919101824204.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 流程操作
+
+## 流程定义
+
+流程定义是线下按照bpmn2.0标准去描述业务流程
+
+
+
+创建一个比较简单的请假流程
+
+![image-20230919103139852](img/Activiti学习笔记/image-20230919103139852.png)
+
+
+
+![image-20230919103436718](img/Activiti学习笔记/image-20230919103436718.png)
+
+
+
+分别指定两个活动的**名称与负责人**。一个流程模板每个工作节点的负责人当然不可能是固定的，所以，在这里我们采用 Activiti 所支持的 **UEL** 表达式，将负责人定义为动态参数
+
+assignee0 和 assignee1
+
+
+
+![image-20230919103417159](img/Activiti学习笔记/image-20230919103417159.png)
+
+
+
+![image-20230919103504880](img/Activiti学习笔记/image-20230919103504880.png)
+
+
+
+
+
+
+
+## 流程定义部署
+
