@@ -1694,9 +1694,321 @@ key位于xml文件里
 
 
 
+```sql
+select * from act_hi_actinst;
+select * from act_hi_identitylink;
+select * from act_hi_procinst;
+select * from act_hi_taskinst;
+select * from act_ru_execution;
+select * from act_ru_identitylink;
+select * from act_ru_task;
+```
+
+
+
+```sh
+mysql> select * from act_hi_actinst;
++------+--------------+---------------+---------------+------------------------------------------+----------+--------------------+--------------+------------+-----------+-------------------------+-------------------------+-----------+----------------+------------+
+| ID_  | PROC_DEF_ID_ | PROC_INST_ID_ | EXECUTION_ID_ | ACT_ID_                                  | TASK_ID_ | CALL_PROC_INST_ID_ | ACT_NAME_    | ACT_TYPE_  | ASSIGNEE_ | START_TIME_             | END_TIME_               | DURATION_ | DELETE_REASON_ | TENANT_ID_ |
++------+--------------+---------------+---------------+------------------------------------------+----------+--------------------+--------------+------------+-----------+-------------------------+-------------------------+-----------+----------------+------------+
+| 5005 | test:1:2503  | 5001          | 5004          | sid-c3b15a5f-fe70-4fe1-af9a-edf7b415c0ee | NULL     | NULL               | 请假流程定义 | startEvent | NULL      | 2023-09-19 11:23:29.585 | 2023-09-19 11:23:29.586 |         1 | NULL           |            |
+| 5006 | test:1:2503  | 5001          | 5004          | sid-32a2b9d4-6749-4d6b-aedb-2fac3815170c | 5007     | NULL               | 创建申请     | userTask   | 张三      | 2023-09-19 11:23:29.586 | NULL                    |      NULL | NULL           |            |
++------+--------------+---------------+---------------+------------------------------------------+----------+--------------------+--------------+------------+-----------+-------------------------+-------------------------+-----------+----------------+------------+
+2 rows in set (0.00 sec)
+
+mysql> select * from act_hi_identitylink;
++------+-----------+-------------+----------+----------+---------------+
+| ID_  | GROUP_ID_ | TYPE_       | USER_ID_ | TASK_ID_ | PROC_INST_ID_ |
++------+-----------+-------------+----------+----------+---------------+
+| 5008 | NULL      | participant | 张三     | NULL     | 5001          |
++------+-----------+-------------+----------+----------+---------------+
+1 row in set (0.00 sec)
+
+mysql> select * from act_hi_procinst;
++------+---------------+---------------+--------------+-------------------------+-----------+-----------+----------------+------------------------------------------+-------------+----------------------------+----------------+------------+-------+
+| ID_  | PROC_INST_ID_ | BUSINESS_KEY_ | PROC_DEF_ID_ | START_TIME_             | END_TIME_ | DURATION_ | START_USER_ID_ | START_ACT_ID_                            | END_ACT_ID_ | SUPER_PROCESS_INSTANCE_ID_ | DELETE_REASON_ | TENANT_ID_ | NAME_ |
++------+---------------+---------------+--------------+-------------------------+-----------+-----------+----------------+------------------------------------------+-------------+----------------------------+----------------+------------+-------+
+| 5001 | 5001          | NULL          | test:1:2503  | 2023-09-19 11:23:29.567 | NULL      |      NULL | NULL           | sid-c3b15a5f-fe70-4fe1-af9a-edf7b415c0ee | NULL        | NULL                       | NULL           |            | NULL  |
++------+---------------+---------------+--------------+-------------------------+-----------+-----------+----------------+------------------------------------------+-------------+----------------------------+----------------+------------+-------+
+1 row in set (0.00 sec)
+
+mysql> select * from act_hi_taskinst;
++------+--------------+------------------------------------------+---------------+---------------+----------+-----------------+--------------+--------+-----------+-------------------------+-------------+-----------+-----------+----------------+-----------+-----------+-----------+-----------+------------+
+| ID_  | PROC_DEF_ID_ | TASK_DEF_KEY_                            | PROC_INST_ID_ | EXECUTION_ID_ | NAME_    | PARENT_TASK_ID_ | DESCRIPTION_ | OWNER_ | ASSIGNEE_ | START_TIME_             | CLAIM_TIME_ | END_TIME_ | DURATION_ | DELETE_REASON_ | PRIORITY_ | DUE_DATE_ | FORM_KEY_ | CATEGORY_ | TENANT_ID_ |
++------+--------------+------------------------------------------+---------------+---------------+----------+-----------------+--------------+--------+-----------+-------------------------+-------------+-----------+-----------+----------------+-----------+-----------+-----------+-----------+------------+
+| 5007 | test:1:2503  | sid-32a2b9d4-6749-4d6b-aedb-2fac3815170c | 5001          | 5004          | 创建申请 | NULL            | NULL         | NULL   | 张三      | 2023-09-19 11:23:29.592 | NULL        | NULL      |      NULL | NULL           |        50 | NULL      | NULL      | NULL      |            |
++------+--------------+------------------------------------------+---------------+---------------+----------+-----------------+--------------+--------+-----------+-------------------------+-------------+-----------+-----------+----------------+-----------+-----------+-----------+-----------+------------+
+1 row in set (0.00 sec)
+
+mysql> select * from act_ru_execution;
++------+------+---------------+---------------+------------+--------------+-------------+--------------------+------------------------------------------+------------+----------------+-----------+-----------------+-------------+-------------------+-------------------+------------+-------+-------------------------+----------------+------------+-------------------+-------------------+-------------+------------+------------------+-----------------+-----------------------+------------+----------------+
+| ID_  | REV_ | PROC_INST_ID_ | BUSINESS_KEY_ | PARENT_ID_ | PROC_DEF_ID_ | SUPER_EXEC_ | ROOT_PROC_INST_ID_ | ACT_ID_
+        | IS_ACTIVE_ | IS_CONCURRENT_ | IS_SCOPE_ | IS_EVENT_SCOPE_ | IS_MI_ROOT_ | SUSPENSION_STATE_ | CACHED_ENT_STATE_ | TENANT_ID_ | NAME_ | START_TIME_             | START_USER_ID_ | LOCK_TIME_ | IS_COUNT_ENABLED_ | EVT_SUBSCR_COUNT_ | TASK_COUNT_ | JOB_COUNT_ | TIMER_JOB_COUNT_ | SUSP_JOB_COUNT_ | DEADLETTER_JOB_COUNT_ | VAR_COUNT_ | ID_LINK_COUNT_ |
++------+------+---------------+---------------+------------+--------------+-------------+--------------------+------------------------------------------+------------+----------------+-----------+-----------------+-------------+-------------------+-------------------+------------+-------+-------------------------+----------------+------------+-------------------+-------------------+-------------+------------+------------------+-----------------+-----------------------+------------+----------------+
+| 5001 |    1 | 5001          | NULL          | NULL       | test:1:2503  | NULL        | 5001               | NULL
+        |          1 |              0 |         1 |               0 |           0 |                 1 |              NULL |            | NULL  | 2023-09-19 11:23:29.567 | NULL           | NULL       |                 0 |                 0 |           0 |          0 |                0 |               0 |                     0 |          0 |              0 |
+| 5004 |    1 | 5001          | NULL          | 5001       | test:1:2503  | NULL        | 5001               | sid-32a2b9d4-6749-4d6b-aedb-2fac3815170c |          1 |              0 |         0 |               0 |           0 |                 1 |              NULL |            | NULL  | 2023-09-19 11:23:29.584 | NULL           | NULL       |                 0 |                 0 |           0 |          0 |                0 |               0 |                     0 |          0 |              0 |
++------+------+---------------+---------------+------------+--------------+-------------+--------------------+------------------------------------------+------------+----------------+-----------+-----------------+-------------+-------------------+-------------------+------------+-------+-------------------------+----------------+------------+-------------------+-------------------+-------------+------------+------------------+-----------------+-----------------------+------------+----------------+
+2 rows in set (0.00 sec)
+
+mysql> select * from act_ru_identitylink;
++------+------+-----------+-------------+----------+----------+---------------+--------------+
+| ID_  | REV_ | GROUP_ID_ | TYPE_       | USER_ID_ | TASK_ID_ | PROC_INST_ID_ | PROC_DEF_ID_ |
++------+------+-----------+-------------+----------+----------+---------------+--------------+
+| 5008 |    1 | NULL      | participant | 张三     | NULL     | 5001          | NULL         |
++------+------+-----------+-------------+----------+----------+---------------+--------------+
+1 row in set (0.00 sec)
+
+mysql> select * from act_ru_task;
++------+------+---------------+---------------+--------------+----------+-----------------+--------------+------------------------------------------+--------+-----------+-------------+-----------+-------------------------+-----------+-----------+-------------------+------------+-----------+-------------+
+| ID_  | REV_ | EXECUTION_ID_ | PROC_INST_ID_ | PROC_DEF_ID_ | NAME_    | PARENT_TASK_ID_ | DESCRIPTION_ | TASK_DEF_KEY_
+    | OWNER_ | ASSIGNEE_ | DELEGATION_ | PRIORITY_ | CREATE_TIME_            | DUE_DATE_ | CATEGORY_ | SUSPENSION_STATE_ | TENANT_ID_ | FORM_KEY_ | CLAIM_TIME_ |
++------+------+---------------+---------------+--------------+----------+-----------------+--------------+------------------------------------------+--------+-----------+-------------+-----------+-------------------------+-----------+-----------+-------------------+------------+-----------+-------------+
+| 5007 |    1 | 5004          | 5001          | test:1:2503  | 创建申请 | NULL            | NULL         | sid-32a2b9d4-6749-4d6b-aedb-2fac3815170c | NULL   | 张三      | NULL        |        50 | 2023-09-19 11:23:29.586 | NULL      | NULL      |                 1 |            | NULL      | NULL        |
++------+------+---------------+---------------+--------------+----------+-----------------+--------------+------------------------------------------+--------+-----------+-------------+-----------+-------------------------+-----------+-----------+-------------------+------------+-----------+-------------+
+1 row in set (0.00 sec)
+
+mysql>
+```
+
+
+
+![image-20230919113633798](img/Activiti学习笔记/image-20230919113633798.png)
+
+
+
+![image-20230919113640798](img/Activiti学习笔记/image-20230919113640798.png)
+
+
+
+
+
+![image-20230919113649960](img/Activiti学习笔记/image-20230919113649960.png)
+
+
+
+
+
+![image-20230919113657754](img/Activiti学习笔记/image-20230919113657754.png)
+
+
+
+
+
+![image-20230919113707059](img/Activiti学习笔记/image-20230919113707059.png)
+
+
+
+![image-20230919113713718](img/Activiti学习笔记/image-20230919113713718.png)
+
+
+
+![image-20230919113720545](img/Activiti学习笔记/image-20230919113720545.png)
+
+
+
+
+
+
+
 
 
 
 
 ## 任务查询
+
+流程启动后，任务的负责人就可以查询自己当前需要处理的任务，查询出来的任务都是该用户的待办任务
+
+```java
+@Test
+    void testFindPersonalTaskList()
+    {
+        //任务负责人
+        String assignee = "张三";
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        List<Task> taskList = taskService.createTaskQuery()
+                .processDefinitionKey("test")
+                .taskAssignee(assignee)//只查询该任务负责人的任务
+                .list();
+        for (Task task : taskList)
+        {
+            log.info("流程定义id:" + task.getProcessDefinitionId());
+            log.info("流程实例 id:" + task.getId());
+            log.info("任务负责人：" + task.getAssignee());
+            log.info("任务名称：" + task.getName());
+        }
+
+    }
+```
+
+
+
+
+
+```sh
+2023-09-24 11:33:07.491  INFO 27788 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程定义id:test:1:2503
+2023-09-24 11:33:07.492  INFO 27788 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程实例 id:5007
+2023-09-24 11:33:07.492  INFO 27788 --- [           main] .a.ActivitiProcessDeployApplicationTests : 任务负责人：张三
+2023-09-24 11:33:07.492  INFO 27788 --- [           main] .a.ActivitiProcessDeployApplicationTests : 任务名称：创建申请
+2023-09-24 11:33:07.492  INFO 27788 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程定义id:test:1:2503
+2023-09-24 11:33:07.492  INFO 27788 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程实例 id:7507
+2023-09-24 11:33:07.492  INFO 27788 --- [           main] .a.ActivitiProcessDeployApplicationTests : 任务负责人：张三
+2023-09-24 11:33:07.492  INFO 27788 --- [           main] .a.ActivitiProcessDeployApplicationTests : 任务名称：创建申请
+```
+
+
+
+
+
+
+
+
+
+## 流程任务处理
+
+任务负责人查询待办任务，选择任务进行处理，完成任务
+
+```java
+ /**
+     * 完成任务
+     */
+    @Test
+    void completeTask()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        Task task = taskService.createTaskQuery()
+                .processDefinitionKey("test")
+                .taskAssignee("张三")
+                        .list().get(0);
+        //完成任务
+        taskService.complete(task.getId());
+    }
+```
+
+
+
+执行完成后，查询
+
+```java
+@Test
+    void testFindPersonalTaskList2()
+    {
+        //任务负责人
+        String assignee = "王经理";
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        List<Task> taskList = taskService.createTaskQuery()
+                .processDefinitionKey("test")
+                .taskAssignee(assignee)//只查询该任务负责人的任务
+                .list();
+        for (Task task : taskList)
+        {
+            log.info("流程定义id:" + task.getProcessDefinitionId());
+            log.info("流程实例 id:" + task.getId());
+            log.info("任务负责人：" + task.getAssignee());
+            log.info("任务名称：" + task.getName());
+        }
+
+    }
+```
+
+
+
+```sh
+2023-09-24 12:17:57.135  INFO 28432 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程定义id:test:1:2503
+2023-09-24 12:17:57.135  INFO 28432 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程实例 id:10002
+2023-09-24 12:17:57.135  INFO 28432 --- [           main] .a.ActivitiProcessDeployApplicationTests : 任务负责人：王经理
+2023-09-24 12:17:57.135  INFO 28432 --- [           main] .a.ActivitiProcessDeployApplicationTests : 任务名称：审批申请
+```
+
+
+
+
+
+
+
+## 流程定义信息查询
+
+查询流程相关信息，包含流程定义，流程部署，流程定义版本
+
+
+
+```java
+/**
+     * 查询流程定义
+     */
+    @Test
+    public void queryProcessDefinition()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        RepositoryService repositoryService = processEngine.getRepositoryService();
+        ProcessDefinitionQuery processDefinitionQuery = repositoryService.createProcessDefinitionQuery();
+        //查询出当前所有的流程定义
+        List<ProcessDefinition> processDefinitionList = processDefinitionQuery.processDefinitionKey("test")
+                .orderByProcessDefinitionVersion()
+                .desc()
+                .list();
+        //输出
+        processDefinitionList.forEach(processDefinition ->
+        {
+            log.info("流程定义 id=" + processDefinition.getId());
+            log.info("流程定义 name=" + processDefinition.getName());
+            log.info("流程定义 key=" + processDefinition.getKey());
+            log.info("流程定义 Version=" + processDefinition.getVersion());
+            log.info("流程部署ID =" + processDefinition.getDeploymentId());
+        });
+    }
+
+```
+
+
+
+```sh
+2023-09-24 12:26:10.022  INFO 36460 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程定义 id=test:1:2503
+2023-09-24 12:26:10.022  INFO 36460 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程定义 name=test
+2023-09-24 12:26:10.022  INFO 36460 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程定义 key=test
+2023-09-24 12:26:10.022  INFO 36460 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程定义 Version=1
+2023-09-24 12:26:10.022  INFO 36460 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程部署ID =2501
+```
+
+
+
+
+
+
+
+## 流程删除
+
+```java
+ /**
+     * 流程删除
+     */
+    @Test
+    void deleteDeployment()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        RepositoryService repositoryService = processEngine.getRepositoryService();
+        //设置true 级联删除流程定义，即使该流程有流程实例启动也可以删除，设置为false非级别删除方式
+        repositoryService.deleteDeployment("2503",false);
+    }
+```
+
+
+
+* 使用repositoryService删除流程定义，历史表信息不会被删除
+* 如果该流程定义下没有正在运行的流程，则可以用普通删除
+* 如果该流程定义下存在已经运行的流程，使用普通删除报错，可用级联删除方法将流程及相关记录全部删除
+* 先删除没有完成流程节点，最后就可以完全删除流程定义信息
+* 项目开发中级联删除操作一般只开放给超级管理员使用
+
+
+
+
+
+
+
+## 流程资源下载
 
