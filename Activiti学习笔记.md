@@ -2012,3 +2012,118 @@ mysql>
 
 ## 流程资源下载
 
+下载之前添加的资源：
+
+```java
+ Deployment deployment = repositoryService.createDeployment()
+                .addClasspathResource("资源位置") // 添加资源
+```
+
+
+
+使用commons-io.jar 解决IO的操作
+
+引入commons-io依赖包
+
+
+
+```xml
+<dependency>
+    <groupId>commons-io</groupId>
+    <artifactId>commons-io</artifactId>
+    <version>2.6</version>
+</dependency>
+```
+
+
+
+```java
+/**
+ * 下载文件
+ *
+ * @throws IOException 异常
+ */
+@Test
+void queryBpmnFile() throws IOException
+{
+    ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+    RepositoryService repositoryService = processEngine.getRepositoryService();
+    ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
+            .processDefinitionKey("test")
+            .singleResult();
+    //得到部署ID
+    String deploymentId = processDefinition.getDeploymentId();
+    InputStream inputStream = repositoryService.getResourceAsStream(deploymentId, processDefinition.getResourceName());
+    File file = new File("./t.bpmn");
+    FileOutputStream fileOutputStream = new FileOutputStream(file);
+    FileCopyUtils.copy(inputStream, fileOutputStream);
+    fileOutputStream.close();
+    inputStream.close();
+}
+```
+
+
+
+* deploymentId为流程部署ID
+* 使用repositoryService的getDeploymentResourceNames方法可以获取指定部署下得所有文件的名称
+* 使用repositoryService的getResourceAsStream方法传入部署ID和资源图片名称可以获取部署下指定名称文件的输入流
+
+
+
+
+
+
+
+## 流程历史信息的查看
+
+流程执行的历史信息保存在activiti的act_hi_*相关的表中，可以通过HistoryService来查看相关的历史记录。
+
+
+
+```java
+/**
+ * 查看历史
+ */
+@Test
+void findHistoryInfo()
+{
+    ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+    HistoryService historyService = processEngine.getHistoryService();
+    List<HistoricActivityInstance> instanceList = historyService.createHistoricActivityInstanceQuery()
+            .processInstanceId("2503")
+            .orderByHistoricActivityInstanceStartTime()
+            .asc()
+            .list();
+    for (HistoricActivityInstance historicActivityInstance : instanceList)
+    {
+        log.info(historicActivityInstance.getActivityId());
+        log.info(historicActivityInstance.getActivityName());
+        log.info(historicActivityInstance.getProcessDefinitionId());
+        log.info(historicActivityInstance.getProcessInstanceId());
+    }
+}
+```
+
+
+
+```sh
+2023-09-26 15:28:08.213  INFO 7888 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程定义id:test:1:2503
+2023-09-26 15:28:08.213  INFO 7888 --- [           main] .a.ActivitiProcessDeployApplicationTests : 流程实例 id:7507
+2023-09-26 15:28:08.213  INFO 7888 --- [           main] .a.ActivitiProcessDeployApplicationTests : 任务负责人：张三
+2023-09-26 15:28:08.213  INFO 7888 --- [           main] .a.ActivitiProcessDeployApplicationTests : 任务名称：创建申请
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 流程实例
+
