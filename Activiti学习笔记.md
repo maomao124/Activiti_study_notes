@@ -2127,3 +2127,226 @@ void findHistoryInfo()
 
 # 流程实例
 
+## 概述
+
+流程实例代表流程定义的执行实例，一个流程实例包括了所有的运行节点，我们可以利用这个对象来了解当前流程实例的进度等信息
+
+用户或程序按照流程定义内容发起一个流程，这就是一个流程实例
+
+
+
+流程定义部署在activiti后，就可以在系统中通过activiti去管理该流程的执行，执行流程表示流程的一次执行
+
+比如部署系统出差流程后，如果某用户要申请出差这时就需要执行这个流程，如果另外一个用户也要申请出差则也需要执行该流程，每个执行互不影响，每个执行是单独的流程实例
+
+启动流程实例时，可以指定的businesskey，businesskey为业务标识，通常为业务表的主键，业务标识和流程实例一一对应
+
+
+
+
+
+
+
+## 查询流程实例
+
+流程在运行过程中可以查询流程实例的状态，当前运行结点等信息
+
+```java
+List<ProcessInstance> list = runtimeService
+				.createProcessInstanceQuery()
+				.processDefinitionKey(processDefinitionKey)
+				.list();
+```
+
+
+
+
+
+## 关联BusinessKey
+
+在activiti实际应用时，查询流程实例列表时可能要显示出业务系统的一些相关信息
+
+在查询流程实例时，通过businessKey（业务标识 ）关联查询业务系统的出差单表，查询出出差天数等信息
+
+
+
+获取BusinessKey：
+
+```java
+String businessKey = processInstance.getBusinessKey();
+```
+
+
+
+设置BusinessKey：
+
+```java
+//30为BusinessKey
+ProcessInstance processInstance = runtimeService.
+                startProcessInstanceByKey("test","30");
+```
+
+
+
+
+
+
+
+## 挂起、激活流程实例
+
+某些情况可能由于流程变更需要将当前运行的流程暂停而不是直接删除，流程暂停后将不会继续执行
+
+
+
+### 全部流程实例挂起
+
+操作流程定义为挂起状态，该流程定义下边所有的流程实例全部暂停
+
+流程定义为挂起状态该流程定义将不允许启动新的流程实例，同时该流程定义下所有的流程实例将全部挂起暂停执行
+
+
+
+```java
+//得到当前流程定义的实例是否都为暂停状态
+boolean suspended = processInstance.isSuspended();
+```
+
+
+
+```java
+//暂停
+repositoryService.suspendProcessDefinitionById(processDefinitionId,true,null);
+```
+
+
+
+```java
+//激活
+repositoryService.activateProcessDefinitionById(processDefinitionId,true,null);
+```
+
+
+
+
+
+### 单个流程实例挂起
+
+操作流程实例对象，针对单个流程执行挂起操作，某个流程实例挂起则此流程不再继续执行，完成该流程实例的当前任务将报异常
+
+
+
+```java
+//暂停
+runtimeService.suspendProcessInstanceById(processDefinitionId);
+```
+
+
+
+```java
+//激活
+runtimeService.activateProcessInstanceById(processDefinitionId);
+```
+
+
+
+
+
+
+
+
+
+
+
+# 个人任务
+
+## 分配任务负责人
+
+### 固定分配
+
+在进行业务流程建模时指定固定的任务负责人
+
+
+
+![image-20230927160205194](img/Activiti学习笔记/image-20230927160205194.png)
+
+
+
+
+
+### 表达式分配
+
+由于固定分配方式，任务只管一步一步执行任务，执行到每一个任务将按照 bpmn 的配置去分配任务负责人
+
+
+
+#### UEL 表达式
+
+activiti 支持两个 UEL 表达式： UEL-value 和 UEL-method
+
+
+
+#####  UEL-value
+
+
+
+![image-20230927153215391](img/Activiti学习笔记/image-20230927153215391.png)
+
+
+
+assignee 这个变量是 activiti 的一个流程变量
+
+
+
+![image-20230927160112201](img/Activiti学习笔记/image-20230927160112201.png)
+
+
+
+user 也是 activiti 的一个流程变量， user.assignee 表示通过调用 user 的 getter 方法获取值
+
+
+
+
+
+
+
+##### UEL-method
+
+userBean 是 spring 容器中的一个 bean，表示调用该 bean 的 getUserId()方法
+
+![image-20230927160326822](img/Activiti学习笔记/image-20230927160326822.png)
+
+
+
+
+
+##### UEL-method与UEL-value结合
+
+
+
+示例：
+
+`${ldapService.findManagerForEmployee(emp)}`
+
+ldapService 是 spring 容器的一个 bean，findManagerForEmployee 是该 bean 的一个方法，emp 是 activiti
+流程变量， emp 作为参数传到 ldapService.findManagerForEmployee 方法中
+
+
+
+
+
+##### 其它
+
+表达式支持解析基础类型、 bean、 list、 array 和 map，也可作为条件判断
+
+
+
+示例：
+
+`${order.price > 100 && order.price < 250} `
+
+
+
+
+
+#### 编写代码配置负责人
+
