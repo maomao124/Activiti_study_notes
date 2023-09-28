@@ -2350,3 +2350,53 @@ ldapService 是 spring 容器的一个 bean，findManagerForEmployee 是该 bean
 
 #### 编写代码配置负责人
 
+```java
+ //设置assignee的取值，用户可以在界面上设置流程的执行
+        Map<String,Object> assigneeMap = new HashMap<>();
+        assigneeMap.put("assignee0","张三");
+        assigneeMap.put("assignee1","李经理");
+runtimeService.startProcessInstanceByKey("myEvection1",assigneeMap);
+```
+
+
+
+
+
+
+
+### 监听器分配
+
+可以使用监听器来完成很多Activiti流程的业务，流程设计时就不需要指定assignee
+
+
+
+事件：
+
+* Create：任务创建后触发
+* Assignment：任务分配后触发
+* Delete：任务完成后触发
+* All：所有事件发生都触发
+
+
+
+定义任务监听类，且类必须实现 org.activiti.engine.delegate.TaskListener 接口 
+
+```java
+public class MyTaskListener implements TaskListener {
+    @Override
+    public void notify(DelegateTask delegateTask) {
+        if(delegateTask.getName().equals("创建出差申请")&&
+                delegateTask.getEventName().equals("create")){
+            //这里指定任务负责人
+            delegateTask.setAssignee("张三");
+        }
+    }
+} 
+```
+
+
+
+
+
+
+
