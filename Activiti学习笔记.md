@@ -2400,3 +2400,139 @@ public class MyTaskListener implements TaskListener {
 
 
 
+
+
+## 查询任务
+
+```java
+List<Task> taskList = taskService.createTaskQuery()
+    	.processDefinitionKey(processDefinitionKey)
+    	.includeProcessVariables()
+        .taskAssignee(assignee)
+        .list();
+```
+
+
+
+
+
+
+
+## 办理任务
+
+在实际应用中，完成任务前需要校验任务的负责人是否具有该任务的办理权限
+
+```java
+//根据任务id和任务负责人查询当前任务，如果查到该用户有权限，就完成
+        Task task = taskService.createTaskQuery()
+                .taskId(taskId)
+                .taskAssignee(assingee)
+                .singleResult();
+        if(task != null){
+            taskService.complete(taskId);
+            System.out.println("完成任务");
+        }
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 流程变量
+
+## 概述
+
+流程变量在 activiti 中是一个非常重要的角色，流程运转有时需要靠流程变量，业务系统和 activiti
+结合时少不了流程变量，流程变量就是 activiti 在管理工作流时根据管理需要而设置的变量。
+
+
+
+在出差申请流程流转时如果出差天数大于 3 天则由总经理审核，否则由人事直接审核， 出差天
+数就可以设置为流程变量，在流程流转时使用
+
+
+
+虽然流程变量中可以存储业务数据可以通过activiti的api查询流程变量从而实现 查询业务数据，但是不建议这样使用，因为业务数据查询由业务系统负责，activiti设置流程变量是为了流程执行需要而创建
+
+
+
+
+
+## 流程变量类型
+
+如果将 pojo 存储到流程变量中，必须实现序列化接口 serializable，为了防止由于新增字段无法反序列化，需要生成 serialVersionUID
+
+
+
+类型如下：
+
+* string
+* integer
+* short
+* long
+* double
+* boolean
+* date
+* binary
+* seriailzable
+
+
+
+
+
+## 流程变量作用域
+
+流程变量的作用域可以是一个流程实例(processInstance)，或一个任务(task)，或一个执行实例(execution)
+
+
+
+### globa变量
+
+流程变量的默认作用域是流程实例。当一个流程变量的作用域为流程实例时，可以称为 global 变量
+
+global 变量中变量名不允许重复，设置相同名称的变量，后设置的值会覆盖前设置的变量值
+
+
+
+### local变量
+
+任务和执行实例仅仅是针对一个任务和一个执行实例范围，范围没有流程实例大， 称为 local 变量
+
+Local 变量由于在不同的任务或不同的执行实例中，作用域互不影响，变量名可以相同没有影响。Local 变量名也可以和 global 变量名相同，没有影响
+
+
+
+
+
+## 使用方法
+
+### 在属性上使用UEL表达式
+
+可以在 assignee 处设置 UEL 表达式，表达式的值为任务的负责人，比如： ${assignee}， assignee 就是一个流程变量名称
+
+
+
+### 在连线上使用UEL表达式
+
+可以在连线上设置UEL表达式，决定流程走向
+
+比如：${price<10000} 。price就是一个流程变量名称，uel表达式结果类型为布尔类型
+
+
+
+
+
+## 使用Global变量控制流程
+
+
+
+
+
