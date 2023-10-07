@@ -2532,6 +2532,393 @@ Local 变量由于在不同的任务或不同的执行实例中，作用域互�
 
 ## 使用Global变量控制流程
 
+### 需求
+
+员工创建出差申请单，由部门经理审核，部门经理审核通过后出差3天及以下由人财务直接审批，3天以上先由总经理审核，总经理审核通过再由财务审批
+
+
+
+![image-20231007152728899](img/Activiti学习笔记/image-20231007152728899.png)
+
+
+
+
+
+
+
+### 流程定义
+
+创建：
+
+![image-20231007153729094](img/Activiti学习笔记/image-20231007153729094.png)
+
+
+
+![image-20231007153740958](img/Activiti学习笔记/image-20231007153740958.png)
+
+
+
+右键点击设计
+
+![image-20231007153800776](img/Activiti学习笔记/image-20231007153800776.png)
+
+
+
+添加开始事件
+
+![image-20231007153823404](img/Activiti学习笔记/image-20231007153823404.png)
+
+
+
+![image-20231007153835546](img/Activiti学习笔记/image-20231007153835546.png)
+
+
+
+添加填写出差单
+
+![image-20231007153904705](img/Activiti学习笔记/image-20231007153904705.png)
+
+
+
+填写名称
+
+![image-20231007154012278](img/Activiti学习笔记/image-20231007154012278.png)
+
+
+
+添加部门经理审批
+
+![image-20231007154047784](img/Activiti学习笔记/image-20231007154047784.png)
+
+
+
+![image-20231007154125240](img/Activiti学习笔记/image-20231007154125240.png)
+
+
+
+
+
+添加总经理审批
+
+![image-20231007154224781](img/Activiti学习笔记/image-20231007154224781.png)
+
+
+
+添加财务审批
+
+![image-20231007154331687](img/Activiti学习笔记/image-20231007154331687.png)
+
+
+
+结束
+
+![image-20231007154355262](img/Activiti学习笔记/image-20231007154355262.png)
+
+
+
+连线
+
+![image-20231007154733389](img/Activiti学习笔记/image-20231007154733389.png)
+
+
+
+
+
+填写出差天数小于3连线条件
+
+![image-20231007155304852](img/Activiti学习笔记/image-20231007155304852.png)
+
+
+
+evection为一个对象，num为evection对象里的num属性
+
+
+
+填写出差天数大于等于3连线条件
+
+![image-20231007155446566](img/Activiti学习笔记/image-20231007155446566.png)
+
+
+
+
+
+填写对应的assignee
+
+![image-20231007155904116](img/Activiti学习笔记/image-20231007155904116.png)
+
+
+
+![image-20231007155911547](img/Activiti学习笔记/image-20231007155911547.png)
+
+
+
+![image-20231007155919262](img/Activiti学习笔记/image-20231007155919262.png)
+
+
+
+![image-20231007155929103](img/Activiti学习笔记/image-20231007155929103.png)
+
+
+
+
+
+
+
+xml文件如下：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.activiti.org/processdef">
+    <process id="test" name="test" isExecutable="true">
+        <startEvent id="sid-a3f22bc2-2624-4c15-b2b9-05bc4b491ec9" name="填写出差单"/>
+        <userTask id="sid-63f05c99-05c9-4735-81d0-0318f3672601" name="填写出差单" activiti:assignee="${assignee0}"/>
+        <userTask id="sid-f9c550a9-b6db-457f-843a-1ad8ebd4471f" name="部门经理审批" activiti:assignee="${assignee1}"/>
+        <userTask id="sid-74dfacb1-b707-4dcf-b16f-3721d9c3269e" name="总经理审批" activiti:assignee="${assignee2}"/>
+        <userTask id="sid-c4d7ddf1-79c5-4890-a9bc-daae67dd603a" name="财务审批" activiti:assignee="${assignee3}"/>
+        <endEvent id="sid-62c7a357-5389-4abf-92d9-37bf4daebe07"/>
+        <sequenceFlow id="sid-58662137-3afe-4833-a23c-dc7d7640e4ce" sourceRef="sid-a3f22bc2-2624-4c15-b2b9-05bc4b491ec9"
+                      targetRef="sid-63f05c99-05c9-4735-81d0-0318f3672601"/>
+        <sequenceFlow id="sid-483a3633-566c-4d48-9450-1e792d0e398b" sourceRef="sid-c4d7ddf1-79c5-4890-a9bc-daae67dd603a"
+                      targetRef="sid-62c7a357-5389-4abf-92d9-37bf4daebe07"/>
+        <sequenceFlow id="sid-df9f0725-0328-4029-a5a5-55ff96e86a11" sourceRef="sid-74dfacb1-b707-4dcf-b16f-3721d9c3269e"
+                      targetRef="sid-c4d7ddf1-79c5-4890-a9bc-daae67dd603a"/>
+        <sequenceFlow id="sid-0093c9ff-43cf-4dbb-967c-a3d01b945b6b" sourceRef="sid-63f05c99-05c9-4735-81d0-0318f3672601"
+                      targetRef="sid-f9c550a9-b6db-457f-843a-1ad8ebd4471f"/>
+        <sequenceFlow id="sid-7708ec8f-a258-4642-b892-8cb61b9fcb08" sourceRef="sid-f9c550a9-b6db-457f-843a-1ad8ebd4471f"
+                      targetRef="sid-74dfacb1-b707-4dcf-b16f-3721d9c3269e" name="evection.num&gt;=3">
+            <documentation>天数大于等于3</documentation>
+            <conditionExpression>${evection.num&gt;=3}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="sid-c64e0ebc-3803-418f-8e6f-be662d0d2586" sourceRef="sid-f9c550a9-b6db-457f-843a-1ad8ebd4471f"
+                      targetRef="sid-c4d7ddf1-79c5-4890-a9bc-daae67dd603a" name="evection.num&lt;3">
+            <documentation>天数小于3天</documentation>
+            <conditionExpression>${evection.num&lt;3}</conditionExpression>
+        </sequenceFlow>
+    </process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_test">
+        <bpmndi:BPMNPlane bpmnElement="test" id="BPMNPlane_test">
+            <bpmndi:BPMNShape id="shape-9ad45617-e012-402b-94a6-d845aa07d2e6"
+                              bpmnElement="sid-a3f22bc2-2624-4c15-b2b9-05bc4b491ec9">
+                <omgdc:Bounds x="-175.0" y="-85.0" width="30.0" height="30.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="shape-842e04c7-ca37-4e6c-843c-a41d844c1d28"
+                              bpmnElement="sid-63f05c99-05c9-4735-81d0-0318f3672601">
+                <omgdc:Bounds x="-85.0" y="-105.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="shape-c03cede2-a022-45c5-9474-31117a97b616"
+                              bpmnElement="sid-f9c550a9-b6db-457f-843a-1ad8ebd4471f">
+                <omgdc:Bounds x="50.0" y="-105.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="shape-c0458a26-653b-4502-ba86-a29dc6e18bd2"
+                              bpmnElement="sid-74dfacb1-b707-4dcf-b16f-3721d9c3269e">
+                <omgdc:Bounds x="-85.0" y="40.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="shape-c2df426e-2d55-44c8-9b9e-4d2a3f1cd772"
+                              bpmnElement="sid-c4d7ddf1-79c5-4890-a9bc-daae67dd603a">
+                <omgdc:Bounds x="50.0" y="150.0" width="100.0" height="80.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="shape-294292d1-05bc-400a-8657-849239dcaf7a"
+                              bpmnElement="sid-62c7a357-5389-4abf-92d9-37bf4daebe07">
+                <omgdc:Bounds x="-20.0" y="250.0" width="30.0" height="30.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="edge-4eef764e-e601-4274-be70-7a2983007bbf"
+                             bpmnElement="sid-58662137-3afe-4833-a23c-dc7d7640e4ce">
+                <omgdi:waypoint x="-145.0" y="-62.5"/>
+                <omgdi:waypoint x="-85.0" y="-65.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="edge-9df9418d-bc3b-425d-baa0-374a759fe404"
+                             bpmnElement="sid-483a3633-566c-4d48-9450-1e792d0e398b">
+                <omgdi:waypoint x="50.0" y="210.0"/>
+                <omgdi:waypoint x="2.5" y="250.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="edge-40b8582a-e79e-4a75-8029-67d6edeb368d"
+                             bpmnElement="sid-df9f0725-0328-4029-a5a5-55ff96e86a11">
+                <omgdi:waypoint x="-10.0" y="120.0"/>
+                <omgdi:waypoint x="50.0" y="170.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="edge-b5366cd9-6f9d-4fbd-95ca-9ca6e4218ba4"
+                             bpmnElement="sid-0093c9ff-43cf-4dbb-967c-a3d01b945b6b">
+                <omgdi:waypoint x="15.0" y="-65.0"/>
+                <omgdi:waypoint x="50.0" y="-65.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="edge-a1292cd8-69ea-4370-90df-dd9fa3baa829"
+                             bpmnElement="sid-7708ec8f-a258-4642-b892-8cb61b9fcb08">
+                <omgdi:waypoint x="75.0" y="-25.0"/>
+                <omgdi:waypoint x="15.0" y="60.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="edge-ccd02057-64b3-447b-adc2-197a25653b2e"
+                             bpmnElement="sid-c64e0ebc-3803-418f-8e6f-be662d0d2586">
+                <omgdi:waypoint x="100.0" y="-25.0"/>
+                <omgdi:waypoint x="100.0" y="150.0"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>
+
+```
+
+
+
+
+
+
+
+### 创建实体类Evection
+
+```java
+package mao.activiti_global_variable.entity;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.StringJoiner;
+
+/**
+ * Project name(项目名称)：activiti-global-variable
+ * Package(包名): mao.activiti_global_variable.entity
+ * Class(类名): Evection
+ * Author(作者）: mao
+ * Author QQ：1296193245
+ * GitHub：https://github.com/maomao124/
+ * Date(创建日期)： 2023/10/7
+ * Time(创建时间)： 16:01
+ * Version(版本): 1.0
+ * Description(描述)： 无
+ */
+
+public class Evection implements Serializable
+{
+    /**
+     * 主键id
+     */
+    private Long id;
+    /**
+     * 出差申请单名称
+     */
+    private String evectionName;
+    /**
+     * 出差天数
+     */
+    private Double num;
+    /**
+     * 预计开始时间
+     */
+    private Date beginDate;
+    /**
+     * 预计结束时间
+     */
+    private Date endDate;
+    /**
+     * 目的地
+     */
+    private String destination;
+    /**
+     * 出差事由
+     */
+    private String reson;
+
+    public Long getId()
+    {
+        return id;
+    }
+
+    public void setId(Long id)
+    {
+        this.id = id;
+    }
+
+    public String getEvectionName()
+    {
+        return evectionName;
+    }
+
+    public void setEvectionName(String evectionName)
+    {
+        this.evectionName = evectionName;
+    }
+
+    public Date getBeginDate()
+    {
+        return beginDate;
+    }
+
+    public void setBeginDate(Date beginDate)
+    {
+        this.beginDate = beginDate;
+    }
+
+    public Date getEndDate()
+    {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate)
+    {
+        this.endDate = endDate;
+    }
+
+    public String getDestination()
+    {
+        return destination;
+    }
+
+    public void setDestination(String destination)
+    {
+        this.destination = destination;
+    }
+
+    public String getReson()
+    {
+        return reson;
+    }
+
+    public void setReson(String reson)
+    {
+        this.reson = reson;
+    }
+
+    public Double getNum()
+    {
+        return num;
+    }
+
+    public void setNum(Double num)
+    {
+        this.num = num;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new StringJoiner(", ", Evection.class.getSimpleName() + "[", "]")
+                .add("id=" + id)
+                .add("evectionName='" + evectionName + "'")
+                .add("num=" + num)
+                .add("beginDate=" + beginDate)
+                .add("endDate=" + endDate)
+                .add("destination='" + destination + "'")
+                .add("reson='" + reson + "'")
+                .toString();
+    }
+}
+
+```
+
+
+
+
+
+
+
+### 启动流程时设置变量
+
 
 
 
