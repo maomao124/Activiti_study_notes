@@ -2919,7 +2919,261 @@ public class Evection implements Serializable
 
 ### 启动流程时设置变量
 
+在启动流程时设置流程变量，变量的作用域是整个流程实例
 
+通过Map<key,value>设置流程变量，map中可以设置多个变量，这个key就是流程变量的名字
+
+
+
+```java
+ @Test
+    void startProcess()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        RuntimeService runtimeService = processEngine.getRuntimeService();
+        //变量集合
+        Map<String, Object> map = new HashMap<>();
+        //创建出差实体类
+        Evection evection = new Evection();
+        evection.setNum(2d);
+        //实体类
+        map.put("evection", evection);
+        //人名参数
+        map.put("assignee0", "张三");
+        map.put("assignee1", "李经理");
+        map.put("assignee2", "王总经理");
+        map.put("assignee3", "赵财务");
+        //启动流程实例
+        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("test", map);
+        log.info("id:" + processInstance.getId());
+        log.info("名称：" + processInstance.getName());
+    }
+```
+
+
+
+
+
+
+
+### 张三提交任务
+
+```java
+/**
+     * 张三提交任务
+     */
+    @Test
+    void completeTask1()
+    {
+        String assingee = "张三";
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        Task task = taskService.createTaskQuery()
+                .processDefinitionKey("test")
+                .taskAssignee(assingee)
+                .orderByTaskCreateTime()
+                .desc()
+                .list()
+                .get(0);
+        if (task == null)
+        {
+            log.info("无权操作");
+        }
+        else
+        {
+            taskService.complete(task.getId());
+            log.info("任务执行完成");
+        }
+    }
+```
+
+
+
+
+
+
+
+### 任务办理时设置变量
+
+在完成任务时设置流程变量，该流程变量只有在该任务完成后其它结点才可使用该变量，它的作用域是整个流程实例，如果设置的流程变量的key在流程实例中已存在相同的名字则后设置的变量替换前边设置的变量
+
+```java
+/**
+     * 张三提交任务，任务办理时设置变量
+     */
+    @Test
+    void completeTask1_1()
+    {
+        String assingee = "张三";
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        Task task = taskService.createTaskQuery()
+                .processDefinitionKey("test")
+                .taskAssignee(assingee)
+                .orderByTaskCreateTime()
+                .desc()
+                .list()
+                .get(0);
+        if (task == null)
+        {
+            log.info("无权操作");
+        }
+        else
+        {
+            Map<String, Object> map = new HashMap<>();
+            //创建出差实体类
+            Evection evection = new Evection();
+            evection.setNum(2d);
+            //实体类
+            map.put("evection", evection);
+            taskService.complete(task.getId(), map);
+            log.info("任务执行完成");
+        }
+    }
+```
+
+
+
+通过当前任务设置流程变量，需要指定当前任务id，如果当前执行的任务id不存在则抛出异常
+
+任务办理时也是通过map<key,value>设置流程变量，一次可以设置多个变量
+
+
+
+
+
+### 通过当前流程实例设置
+
+通过流程实例id设置全局变量，该流程实例必须未执行完成
+
+
+
+```java
+/**
+     * 通过当前流程实例设置
+     */
+    @Test
+    void setGlobalVariableByExecutionId()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        RuntimeService runtimeService = processEngine.getRuntimeService();
+        Evection evection = new Evection();
+        evection.setNum(3d);
+        runtimeService.setVariable("7501", "evection", evection);
+    }
+```
+
+
+
+executionId必须当前未结束流程实例的执行id，通常此id设置流程实例的id。也可以通runtimeService.getVariable()获取流程变量
+
+
+
+
+
+### 通过当前任务设置
+
+
+
+```java
+@Test
+    void setGlobalVariableByTaskId()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        Evection evection = new Evection();
+        evection.setNum(3d);
+        taskService.setVariable("2501", "evection", evection);
+    }
+```
+
+
+
+任务id必须是当前待办任务id，act_ru_task中存在
+
+也可以通过taskService.getVariable()获取流程变量
+
+
+
+
+
+### 注意事项
+
+* 如果UEL表达式中流程变量名不存在则报错
+* 如果UEL表达式中流程变量值为空NULL，流程不按UEL表达式去执行，而流程结束
+* 如果UEL表达式都不符合条件，流程结束
+* 如果连线不设置条件，会走flow序号小的那条线
+
+
+
+
+
+
+
+
+
+
+
+## 设置local流程变量
+
+### 任务办理时设置
+
+任务办理时设置local流程变量，当前运行的流程实例只能在该任务结束前使用，任务结束该变量无法在当前流程实例使用，可以通过查询历史任务查询
+
+
+
+```java
+/**
+     * 任务办理时设置local流程变量
+     */
+    @Test
+    void completeTask()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        Map<String, Object> map = new HashMap<>();
+        Evection evection = new Evection();
+        evection.setNum(3d);
+        taskService.setVariablesLocal("2501", map);
+    }
+```
+
+
+
+设置作用域为任务的local变量，每个任务可以设置同名的变量，互不影响
+
+
+
+
+
+### 通过当前任务设置
+
+```java
+/**
+     * 通过当前任务设置local流程变量
+     */
+    @Test
+    void setLocalVariableByTaskId()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        Evection evection = new Evection ();
+        evection.setNum(3d);
+        taskService.setVariableLocal("2501", "evection", evection);
+    }
+```
+
+
+
+
+
+
+
+
+
+
+
+# 组任务
 
 
 
