@@ -3175,5 +3175,229 @@ executionId必须当前未结束流程实例的执行id，通常此id设置流�
 
 # 组任务
 
+## 概述
+
+在流程定义中在任务结点的 assignee 固定设置任务负责人，在流程定义时将参与者固定设置在.bpmn 文件中，如果临时任务负责人变更则需要修改流程定义，系统可扩展性差
+
+针对这种情况可以给任务设置多个候选人，可以从候选人中选择参与者来完成任务
+
+
+
+
+
+## 设置任务候选人
+
+在流程图中任务节点的配置中设置 candidate-users(候选人)，多个候选人之间用逗号分开
+
+
+
+![image-20231015133055773](img/Activiti学习笔记/image-20231015133055773.png)
+
+
+
+```xml
+<userTask id="sid-74dfacb1-b707-4dcf-b16f-3721d9c3269e" name="总经理审批" activiti:assignee="${assignee2}" activiti:candidateUsers="user1,user2,user3"/>
+```
+
+
+
+
+
+
+
+## 查询组任务
+
+根据候选人查询组任务
+
+
+
+```java
+@Test
+    void findGroupTaskList()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        List<Task> list = taskService.createTaskQuery()
+                .processDefinitionKey("test")
+                .taskCandidateUser("user2")//根据候选人查询
+                .list();
+        for (Task task : list)
+        {
+            log.info("流程实例id：" + task.getProcessInstanceId());
+            log.info("任务id：" + task.getId());
+            log.info("任务负责人：" + task.getAssignee());
+            log.info("任务名称：" + task.getName());
+        }
+    }
+```
+
+
+
+
+
+## 拾取组任务
+
+候选人员拾取组任务后该任务变为自己的个人任务
+
+即使该用户不是候选人也能拾取，建议拾取时校验是否有资格
+
+组任务拾取后，该任务已有负责人，通过候选人将查询不到该任务
+
+```java
+@Test
+    void claimTask()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        //校验该用户有没有拾取任务的资格
+        Task task = taskService.createTaskQuery()
+                .taskId("7501")
+                .taskCandidateUser("user2")//根据候选人查询
+                .singleResult();
+        if (task==null)
+        {
+            log.info("user2无资格");
+        }
+        else
+        {
+            taskService.claim("7501", "user2");
+            log.info("user2 任务拾取成功");
+        }
+    }
+```
+
+
+
+
+
+## 查询个人待办任务
+
+ 查询方式同个人任务查询
+
+
+
+```java
+@Test
+    void findPersonalTaskList()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        List<Task> list = taskService.createTaskQuery()
+                .processDefinitionKey("test")
+                .taskAssignee("user2")
+                .list();
+        for (Task task : list)
+        {
+            log.info("流程实例id：" + task.getProcessInstanceId());
+            log.info("任务id：" + task.getId());
+            log.info("任务负责人：" + task.getAssignee());
+            log.info("任务名称：" + task.getName());
+        }
+    }
+```
+
+
+
+
+
+## 办理个人任务
+
+```java
+@Test
+    void completeTask()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        processEngine.getTaskService()
+                .complete("7501");
+    }
+```
+
+
+
+
+
+## 归还组任务
+
+如果个人不想办理该组任务，可以归还组任务，归还后该用户不再是该任务的负责人
+
+
+
+```java
+ @Test
+    void setAssigneeToGroupTask()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        Task task = taskService
+                .createTaskQuery()
+                .taskId("7501")
+                .taskAssignee("user2")
+                .singleResult();
+        if (task != null)
+        {
+            // 如果设置为null，归还组任务,该 任务没有负责人
+            taskService.setAssignee("7501", null);
+        }
+    }
+```
+
+
+
+
+
+## 任务交接
+
+任务负责人将任务交给其它候选人办理该任务
+
+
+
+```java
+ @Test
+    void setAssigneeToCandidateUser()
+    {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        TaskService taskService = processEngine.getTaskService();
+        Task task = taskService
+                .createTaskQuery()
+                .taskId("7501")
+                .taskAssignee("user2")
+                .singleResult();
+        if (task!=null)
+        {
+            taskService.setAssignee("7501", "user3");
+        }
+    }
+```
+
+
+
+
+
+
+
+
+
+# 网关
+
+## 排他网关
+
+### 概述
+
+ExclusiveGateway(排他网关)，用来在流程中实现决策。 当流程执行到这个网关，所有分支都会判断条件是否为true，如果为true则执行该分支
+
+排他网关只会选择一个为true的分支执行。如果有两个分支条件都为true，排他网关会选择id值较小的一条分支去执行
+
+
+
+不用排他网关也可以实现分支，如：在连线的condition条件上设置分支条件。
+
+在连线设置condition条件的缺点：如果条件都不满足，流程就结束了(是异常结束)。
+
+
+
+
+
+### 流程定义
+
 
 
